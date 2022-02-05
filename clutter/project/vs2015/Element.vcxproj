@@ -1,0 +1,153 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{5B422CD2-E60E-4B69-852D-FD5BD186B6B6}</ProjectGuid>
+    <RootNamespace>Element</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)\..\..\bin\</OutDir>
+    <TargetName>element_d</TargetName>
+    <IncludePath>..\..\source;$(IncludePath)</IncludePath>
+    <SourcePath>..\..\source;$(SourcePath)</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)\..\..\bin\</OutDir>
+    <TargetName>element</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\AST.cpp" />
+    <ClCompile Include="..\..\source\Compiler.cpp" />
+    <ClCompile Include="..\..\source\Constant.cpp" />
+    <ClCompile Include="..\..\source\DataTypes.cpp" />
+    <ClCompile Include="..\..\source\FileManager.cpp" />
+    <ClCompile Include="..\..\source\GarbageCollected.cpp" />
+    <ClCompile Include="..\..\source\Lexer.cpp" />
+    <ClCompile Include="..\..\source\Logger.cpp" />
+    <ClCompile Include="..\..\source\main.cpp" />
+    <ClCompile Include="..\..\source\MemoryManager.cpp" />
+    <ClCompile Include="..\..\source\Native.cpp" />
+    <ClCompile Include="..\..\source\OpCodes.cpp" />
+    <ClCompile Include="..\..\source\Operators.cpp" />
+    <ClCompile Include="..\..\source\Parser.cpp" />
+    <ClCompile Include="..\..\source\SemanticAnalyzer.cpp" />
+    <ClCompile Include="..\..\source\Symbol.cpp" />
+    <ClCompile Include="..\..\source\Tokens.cpp" />
+    <ClCompile Include="..\..\source\Value.cpp" />
+    <ClCompile Include="..\..\source\VirtualMachine.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\source\AST.h" />
+    <ClInclude Include="..\..\source\Compiler.h" />
+    <ClInclude Include="..\..\source\Constant.h" />
+    <ClInclude Include="..\..\source\DataTypes.h" />
+    <ClInclude Include="..\..\source\FileManager.h" />
+    <ClInclude Include="..\..\source\GarbageCollected.h" />
+    <ClInclude Include="..\..\source\Lexer.h" />
+    <ClInclude Include="..\..\source\Logger.h" />
+    <ClInclude Include="..\..\source\MemoryManager.h" />
+    <ClInclude Include="..\..\source\Native.h" />
+    <ClInclude Include="..\..\source\OpCodes.h" />
+    <ClInclude Include="..\..\source\Operators.h" />
+    <ClInclude Include="..\..\source\Parser.h" />
+    <ClInclude Include="..\..\source\SemanticAnalyzer.h" />
+    <ClInclude Include="..\..\source\Symbol.h" />
+    <ClInclude Include="..\..\source\Tokens.h" />
+    <ClInclude Include="..\..\source\Value.h" />
+    <ClInclude Include="..\..\source\VirtualMachine.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\examples\arrays.element" />
+    <None Include="..\..\examples\basic-types.element" />
+    <None Include="..\..\examples\closures.element" />
+    <None Include="..\..\examples\coroutines.element" />
+    <None Include="..\..\examples\example-modules\constants-module.element" />
+    <None Include="..\..\examples\example-modules\functions-module.element" />
+    <None Include="..\..\examples\example-modules\module-with-state.element" />
+    <None Include="..\..\examples\flow-control.element" />
+    <None Include="..\..\examples\functions.element" />
+    <None Include="..\..\examples\gc-tests.element" />
+    <None Include="..\..\examples\iterators.element" />
+    <None Include="..\..\examples\modules.element" />
+    <None Include="..\..\examples\objects.element" />
+    <None Include="..\..\examples\test.element" />
+    <None Include="..\..\tests\00-syntax.element" />
+    <None Include="..\..\tests\01-basic-types.element" />
+    <None Include="..\..\tests\02-flow-control.element" />
+    <None Include="..\..\tests\03-functions.element" />
+    <None Include="..\..\tests\04-arrays.element" />
+    <None Include="..\..\tests\05-objects.element" />
+    <None Include="..\..\tests\06-closures.element" />
+    <None Include="..\..\tests\07-coroutines.element" />
+    <None Include="..\..\tests\08-iteration.element" />
+    <None Include="..\..\tests\09-standard-native-functions.element" />
+    <None Include="..\..\tests\10-modules.element" />
+    <None Include="..\..\tests\11-standard-functions.element" />
+    <None Include="..\..\tests\test-modules\error-on-load-module.element" />
+    <None Include="..\..\tests\test-modules\runtime-error-module.element" />
+    <None Include="..\..\tests\test-modules\simple-module.element" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

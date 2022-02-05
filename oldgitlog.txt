@@ -1,0 +1,81 @@
+commit fbe675301d04f0a62497d8f05e7bcbaeba72d102
+Author: Kaloyan Kaludov <kaloyan.kaludov@gmail.com>
+Date:   Sat Oct 28 00:00:10 2017 +0300
+
+    * Add modules.
+    * Add some basic support for a future standard library.
+    * Refactor debug print logic.
+    * Fix some bugs.
+
+commit 7c49fcd448dd620140a402b905ab7d23fb0652f1
+Author: Kaloyan Kaludov <kaloyan.kaludov@gmail.com>
+Date:   Sun Sep 24 19:11:50 2017 +0300
+
+    * rename generators to iterators.
+    * common iteration interface.
+    * coroutines can now be iterated by a for-loop.
+    * native functions should know about a this object.
+    * accessing object member names by dynamic strings.
+    * some bug fixes.
+    * add some tests.
+    * TODO: add more tests.
+    * add a makefile.
+
+commit cbf0d144cbe33befd75fc1dd132d9891fdab7d50
+Author: Kaloyan Kaludov <kaloyan.kaludov@gmail.com>
+Date:   Wed Aug 30 23:50:37 2017 +0300
+
+    * attempt to fix the github bias towards 8-space tabs.
+
+commit fab5922efeaac19f86b2ee1b7941f224396220a9
+Author: Kaloyan Kaludov <kaloyan.kaludov@gmail.com>
+Date:   Wed Aug 30 23:36:38 2017 +0300
+
+    * Add coroutines.
+    * Add array unpacking which facilitates multiple assignment and multiple return values from functions.
+    * Add underscore variable for unwanted variables.
+    * Add an error type for non-fatal error handling.
+    * Refactoring.
+
+commit 12ae82656dbbb11f95a587d459efa84b537140b1
+Author: Kaloyan Kaludov <kaloyan.kaludov@gmail.com>
+Date:   Sat Jul 1 09:49:40 2017 +0300
+
+    * Build new executable files.
+    * Update the README.md.
+    * Some more stuff for git to ignore.
+    * Lets this be version 0.0.2.
+
+commit 9d1187a8698644f89bc13e026b4a2861aacda330
+Author: Kaloyan Kaludov <kaloyan.kaludov@gmail.com>
+Date:   Fri Jun 30 23:17:02 2017 +0300
+
+    * Refactor most of the code.
+    
+    * The Lexer is now a part of the Parser. Nothing else uses it anyway.
+    * Intermediate data between the interpreter stages is now passed around using std::unique_ptr.
+    * Each StackFrame object is now executed in its own stack frame.
+    * Reworked the way closures work. The new implementation uses an array of free variables that become bound when MakeClosure is executed.
+    * Reworked the way variable lookup works. "Forward declaration" is no longer needed.
+    * Moved variable names resolution and other semantic analysis stuff to the SemanticAnalyzer.
+    * The AST now also stores semantic information about variables and functions.
+    * Simplified the Compiler.
+    * Simplified the VirtualMachine.
+    * Every stage of the interpreter now treats the code as if it is part of a function.
+    * Every function now ends with an EndFunction sentinel instruction.
+    * Simplified error handling.
+    * Removed useless CodeSegment type. The CodeObject type does the same thing.
+    * The internal Function object no longer copies a ton of things from the CodeObject. It now just keeps a reference to it.
+    * Garbage collection still doesn't work.
+
+commit eb068ff5f5cc44b6a6ecf48e5d9c01d57696942e
+Author: Kaloyan Kaludov <kaloyan.kaludov@gmail.com>
+Date:   Sun May 8 22:26:25 2016 +0300
+
+    * build a more recent executable
+
+commit 18e5e1d1197447037113a2f4825c88b1713257cc
+Author: Kaloyan Kaludov <kaloyan.kaludov@gmail.com>
+Date:   Sun May 8 22:09:49 2016 +0300
+
+    * initial commit

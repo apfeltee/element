@@ -1,0 +1,1601 @@
+// file: tests/00-syntax.element
+
+print("testing syntax...");
+
+// comment
+
+/*
+comment
+*/
+true
+
+
+print("comments work fine\n")
+
+
+a = 11
+
+a == 11
+
+print("TESTING: operators\n")
+
+a = 1 + 2 * 3 - 4 / 5 % 6 ^ 7
+
+print("TESTING: operators on multiple lines\n")
+
+a =	1 +
+	2 * 3 - 4 /
+	5 % 6 ^
+	7
+
+print("TESTING: unary operator on the next line is not part of the expression\n")
+
+a =	1
+	- 2
+
+a == 1
+
+print("TESTING: multiple unary minuses\n")
+
+----9 == 9
+
+print("TESTING: unary plus\n")
+
++8 == 8
+
+print("TESTING: multiple unary pluses and minuses\n")
+
+-+--+9 == +-9
+
+
+print("TESTING: block\n")
+
+{}
+true
+
+print("TESTING: nested blocks\n")
+
+{
+	{}
+	{{}}
+	{
+		{}
+	}
+}
+true
+
+
+print("TESTING: function assignment 1\n")
+
+f :: 11
+
+print("TESTING: function assignment 3\n")
+
+f ::
+	12
+
+print("TESTING: function assignment 4\n")
+
+f :() 13
+
+print("TESTING: function assignment 5\n")
+
+f = :() 14
+
+print("TESTING: function assignment 6\n")
+
+f = :(
+) 15
+
+print("TESTING: function assignment 7\n")
+
+f = :
+(
+) 16
+
+print("TESTING: function assignment 8\n")
+
+f = :(a, b) 16 + a + b
+
+print("TESTING: function assignment 9\n")
+
+f = :(a
+, b) a + b
+
+print("TESTING: function assignment 10\n")
+
+f = :(a,
+b) a + b
+
+print("TESTING: function assignment 12 trailing comma\n")
+
+f = :(a, b,) a + b
+
+print("TESTING: string definition 1\n")
+
+a = "abc"
+
+a == "abc"
+
+print("TESTING: string definition 2 TODO: handle escape characters\n")
+
+a = "
+abc"
+
+a == "
+abc"
+
+print("TESTING: array definition 1\n")
+
+[1, 2, 3]
+
+print("TESTING: array definition 2 with trailing comma\n")
+
+[1, 2, 3,]
+
+
+print("TESTING: array definition 5\n")
+
+[1,
+2
+, 3
+]
+
+print("TESTING: array definition 6\n")
+
+[
+1
+,
+2,
+]
+
+print("TESTING: object definition 1\n")
+
+[x=1, y=2, z=3]
+
+print("TESTING: object definition 2 with trailing comma\n")
+
+[x=1, y=2, z=3,]
+
+
+print("TESTING: object definition 6\n")
+
+[
+x=1, 
+y=2, z=3
+]
+
+print("TESTING: object definition 7 single element\n")
+
+[x=1]
+
+print("TESTING: empty object definition\n")
+
+[=]
+
+print("TESTING: function assignment in objects 1\n")
+
+[x = 12,
+f :: 13,
+y = 14
+]
+
+print("TESTING: function assignment in objects 2\n")
+
+[x = 12,
+f :(a) 13 + a,
+y = 14
+]
+
+print("TESTING: function assignment in objects 3\n")
+
+[x = 12,
+f :: 13
+,
+g :() 14
+]
+
+print("TESTING: ignore the underscore variable\n")
+
+_ = 7
+
+true
+
+// file: tests/01-basic-types.element
+
+print("TESTING: boolean logic 1\n")
+
+true
+
+print("TESTING: boolean logic 2\n")
+
+(not false) == true
+
+print("TESTING: boolean logic 3\n")
+
+(not not true) == true
+
+print("TESTING: boolean logic 4\n")
+
+(true and false) == false
+
+print("TESTING: boolean logic 5\n")
+
+(true and true) == true
+
+print("TESTING: boolean logic 6\n")
+
+(false and false) == false
+
+print("TESTING: boolean logic 7\n")
+
+(false or false) == false
+
+print("TESTING: boolean logic 8\n")
+
+(false or true) == true
+
+print("TESTING: boolean logic 9\n")
+
+(false xor true) == true
+
+print("TESTING: boolean logic 10\n")
+
+(true xor true) == false
+
+print("TESTING: boolean logic 11\n")
+
+(false xor false) == false
+
+print("TESTING: boolean logic with nil 1\n")
+
+nil != false
+
+print("TESTING: boolean logic with nil 2\n")
+
+nil != true
+
+print("TESTING: boolean logic with nil 3\n")
+
+not nil == true
+
+print("TESTING: boolean associativity 1\n")
+
+(true and true or false) == true
+
+print("TESTING: boolean associativity 2\n")
+
+(true and false or false) == false
+
+print("TESTING: math comparisons 1\n")
+
+1 < 2
+
+print("TESTING: math comparisons 2\n")
+
+11 > 22 == false
+
+print("TESTING: math comparisons 3\n")
+
+7 <= 8
+
+print("TESTING: math comparisons 4\n")
+
+8 <= 8
+
+print("TESTING: math comparisons 5\n")
+
+17 >= 8
+
+print("TESTING: math comparisons 6\n")
+
+81 >= 81
+
+print("TESTING: math comparisons 7\n")
+
+3.14 > 2.16
+
+print("TESTING: math comparisons 8\n")
+
+3.14 < 2.101 == false
+
+print("TESTING: integer math 1\n")
+
+1 + 3 == 4
+
+print("TESTING: integer math 2\n")
+
+2 - 9 == -7
+
+print("TESTING: integer math 3\n")
+
+3 * 2 == 6
+
+print("TESTING: integer math 4\n")
+
+4 / 2 == 2
+
+print("TESTING: integer math 5\n")
+
+5 / 2 == 2
+
+print("TESTING: integer math 6\n")
+
+5 % 2 == 1
+
+print("TESTING: integer math 7\n")
+
+6 ^ 2 == 36
+
+print("TESTING: floating point math 1\n")
+
+f = 1.1 + 3.1
+
+f > 4.1 and f < 4.3
+
+print("TESTING: floating point math 2\n")
+
+f = 2.1 - 9.1
+
+f > -7.1 and f < -6.9
+
+print("TESTING: floating point math 3\n")
+
+f = 3.1 * 2.1
+
+f > 6.4 and f < 6.6
+
+print("TESTING: floating point math 4\n")
+
+f = 4.0 / 2.0
+
+f > 1.9 and f < 2.1
+
+print("TESTING: floating point math 5\n")
+
+f = 5.0 / 2.0
+
+f > 2.4 and f < 2.6
+
+print("TESTING: floating point math 6\n")
+
+f = 5.0 % 2.0
+
+f > 0.9 and f < 1.1
+
+print("TESTING: floating point math 7\n")
+
+f = 6.0 ^ 1.5
+
+f > 14.5 and f < 14.8
+
+print("TESTING: math operator associativity 1\n")
+
+2 + 3 * 4 == 14
+
+print("TESTING: math operator associativity 2\n")
+
+8 / 4 - 1 == 1
+
+print("TESTING: math operator associativity 3\n")
+
+(2 + 3) * 4 == 20
+
+print("TESTING: math operator associativity 4\n")
+
+8 / (4 - 1) == 2
+
+
+print("TESTING: string creation and comparison\n")
+
+s = "def"
+s == "def"
+
+print("TESTING: string size\n")
+
+s = "1234"
+
+#s == 4
+
+print("TESTING: string comparison\n")
+
+"def" != "abc"
+
+print("TESTING: string concatenation\n")
+
+"def" ~ "abc" == "defabc"
+
+print("TESTING: string conversions 1\n")
+
+~123 == "123"
+
+print("TESTING: string conversions 2\n")
+
+~5.3 -> type() == "string"
+
+print("TESTING: string conversions 3\n")
+
+~nil == "nil"
+
+print("TESTING: string conversions 4\n")
+
+~true == "true"
+
+print("TESTING: string conversions 5\n")
+
+~false == "false"
+
+print("TESTING: size of string\n")
+
+#"tttt" == 4
+
+print("TESTING: uninitialized variable\n")
+
+a == nil
+
+print("TESTING: make error\n")
+
+make_error("Error!") -> type() == "error"
+
+print("TESTING: error to string\n")
+
+~make_error("Error!") == "Error!"
+
+print("TESTING: error comparison\n")
+
+a = make_error("Error!")
+b = make_error("Error!")
+
+a == b
+
+print("TESTING: error is not convertible to any other type\n")
+
+e = make_error("Error!!")
+
+e != true  and
+e != false and
+e != nil   and
+e != 4     and
+e != 7.1   and
+e != "Error!!"
+
+print("TESTING: identify types\n")
+
+n = nil
+i = 42
+f = 3.1415926
+b = true
+s = "string"
+a = [1, 2, 3, "a", "b"]
+o = [x=3, y=4]
+p = :(arg){ print(arg) }
+g = range(1, 5)
+e = make_error("error!")
+
+type(n) == "nil" and
+type(i) == "int" and
+type(f) == "float" and
+type(b) == "bool" and
+type(s) == "string" and
+type(a) == "array" and
+type(o) == "object" and
+type(p) == "function" and
+type(g) == "iterator" and
+type(e) == "error"
+
+// file: tests/02-flow-control.element
+
+print("TESTING: if expression chooses the then path\n")
+
+a = 1
+
+if( true )
+	a = 2
+
+a == 2
+
+print("TESTING: if expression chooses the else path\n")
+
+a = 1
+
+if( false )
+	a = 2
+
+a == 1
+
+print("TESTING: if with block and boolean logic\n")
+
+a = 1
+
+if( false or true )
+{
+	a = 2
+	a = 3
+}
+
+a == 3
+
+print("TESTING: if-else expression chooses the then path\n")
+
+a = 7
+
+if( true )
+	a = 8
+else
+	a = 9
+
+a == 8
+
+print("TESTING: if-else expression chooses the else path\n")
+
+a = 7
+
+if( false )
+	a = 8
+else
+	a = 9
+
+a == 9
+
+print("TESTING: if-elif-else\n")
+
+a = 0
+
+if( false )
+	a = 1
+elif( true )
+	a = 2
+elif( false )
+	a = 3
+else
+	a = 4
+
+a == 2
+
+print("TESTING: while loop\n")
+
+a = 17
+
+while( a > 0 )
+	a -= 10
+
+a == -3
+
+print("TESTING: for loop\n")
+
+s = ""
+
+for( i in [10, 20, 30] )
+	s ~= " " ~ i
+
+s == " 10 20 30"
+
+print("TESTING: break loop\n")
+
+c = 0
+
+for( i in [1, 2, "abc", 3, nil, 4] )
+{
+	if( type(i) == "nil" )
+		break
+	
+	c += 1
+}
+
+c == 4
+
+print("TESTING: continue loop\n")
+
+ c = 0
+
+for( i in [1, 2, "abc", 3, nil, 4] )
+{
+	if( type(i) == "string" )
+		continue
+		
+	c += 1
+}
+
+c == 5
+
+print("TESTING: result of if expression\n")
+
+v = if( 4 > 0 ) 17 else 42
+
+v == 17
+
+print("TESTING: result of if expression without else\n")
+
+v = if( false ) "something"
+
+v == nil
+
+print("TESTING: result of a block\n")
+
+v = {	t = 16
+		p = t ^ 2
+		p + 2
+		if( p < 100 ) 0 else 42
+	}
+
+v == 42
+
+print("TESTING: result of a while loop\n")
+
+c = 0
+
+v = while( c < 10 )
+		c += 1
+
+v == 10
+
+print("TESTING: result of a while loop which doesn't run not even once\n")
+
+v = while( false ) 100
+
+v == nil
+
+print("TESTING: result of a for loop terminated by a break\n")
+
+v = for( i in range(10) )
+	{
+		if( i > 5 )
+			break -1
+		7
+	}
+
+v == -1
+
+print("TESTING: result of a for loop when a continue skips the last iteration\n")
+
+v = for( i in range(10) )
+	{
+		if( i > 5 )
+			continue -2
+		8
+	}
+
+v == -2
+
+
+print("TESTING: continue in a boolean expression\n")
+
+a = 0
+v =	for( i in [1, 2, nil] )
+		a = i or continue 6
+
+a == 2 and
+v == 6
+
+print("TESTING: break in a boolean expression\n")
+
+a = 0
+v =	for( i in [1, nil, 2] )
+		a = i or break 9
+
+a == 1 and
+v == 9
+
+print("TESTING: return in a boolean expression\n")
+
+f :(a, b)
+{
+	a != nil or return 0
+	b != nil or return 1
+	return 11
+}
+
+f(1, 2)   == 11 and
+f(nil, 2) == 0  and
+f(1)      == 1
+
+
+// file: tests/03-functions.element
+
+print("TESTING: function and call definition 1\n")
+
+sum = :(a, b) { return a + b }
+
+sum(2, 3) == 5
+
+print("TESTING: function and call definition 2\n")
+
+sum:(a, b) { return a + b }
+
+sum(4, 3) == 7
+
+print("TESTING: function and call definition 3\n")
+
+sum:(a, b) { a + b }
+
+sum(7, 1) == 8
+
+print("TESTING: function and call definition 4\n")
+
+sum:(a, b) a + b
+
+sum(2, 2) == 4
+
+print("TESTING: function and call definition 5\n")
+
+sum:(a) a + $
+
+sum(1, 3) == 4
+
+print("TESTING: function and call definition 6\n")
+
+sum :: $ + $1
+
+sum(10, 3) == 13
+
+print("TESTING: function and call definition 7\n")
+
+(:: $ + $1)(7, 5) == 12
+
+print("TESTING: function and call definition 8\n")
+
+sum :: $ + $1
+
+1 -> sum(2) == 3
+
+
+print("TESTING: recursion\n")
+
+factorial:(n)
+	if( n == 0 ) 1
+	else n * factorial(n - 1)
+
+factorial(7) == 5040
+
+print("TESTING: getting anonymous parameters 1\n")
+
+f :: $ + 1
+
+f(2) == 3
+
+print("TESTING: getting anonymous parameters 2\n")
+
+f :: $ + $1
+
+f(4, 5) == 9
+
+print("TESTING: getting anonymous parameters 3\n")
+
+f :: $3
+
+f(0, 1, 2, 3, 4, 5) == 3
+
+print("TESTING: first anonymous parameter can be both $ and $0\n")
+
+f :: $ == $0
+
+f(4, 5) == true
+
+
+print("TESTING: anonymous parameters start after the last named parameter\n")
+
+f:(a, b) $1
+
+f("a", "b", "c", "d", "e") == "d"
+
+print("TESTING: getting all anonymous parameters using the $$ array\n")
+
+all_arguments ::
+{
+	a = []
+	for( arg in $$ )
+		a << arg
+	return a
+}
+
+v0 = all_arguments(1, 2, 3, 4)
+v1 = all_arguments("first", "second")
+
+#v0 == 4 and
+#v1 == 2 and
+v0[1] == 2 and
+v1[0] == "first"
+
+
+
+print("TESTING: missing argument results in a nil parameter 1\n")
+
+f :(a, b, c) c == nil
+
+f("a", "b")
+
+print("TESTING: missing argument results in a nil parameter 2\n")
+
+f :(a, b) a == nil and b == nil
+
+f()
+
+print("TESTING: missing argument results in a nil parameter 3\n")
+
+f :(a, b) $ == nil
+
+f(7, 3)
+
+print("TESTING: last evaluated expression is the return value\n")
+
+f ::
+{
+	"a" ~ "b"
+	17 + 13
+	4 * 5
+}
+
+f() == 20
+
+print("TESTING: return early from a function\n")
+
+f ::
+{
+	a = 7
+	return a
+	a = 8
+}
+
+f() == 7
+
+print("TESTING: return without an expression\n")
+
+f ::
+{
+	a = 71
+	return
+	a = 81
+}
+
+f() == nil
+
+// file: tests/04-arrays.element
+
+print("TESTING: array definition and access\n")
+a = [0, 1, 2, 3, 4, 5]
+
+a[2] == 2
+
+print("TESTING: array assignment\n")
+
+a = [0, 1, 2, 3, 4, 5]
+
+a[0] = a[1] + a[2]
+
+a[0] == 3
+
+print("TESTING: getting the size of an array\n")
+
+a = [0, 1, 2, 3, 4]
+
+#a == 5
+
+print("TESTING: negative numbers as indices get the elements from the back of the array\n")
+
+a = [0, 1, 2, 3, 4]
+
+a[-1] == 4 and
+a[-3] == 2
+
+
+print("TESTING: appending to the end of an array\n")
+
+a = [0, 1, 2]
+
+a << 6
+
+#a == 4 and
+a[3] == 6
+
+print("TESTING: removing an element from the end of an array\n")
+
+a = [0, 1, 2]
+
+a >> v
+
+#a == 2 and
+v == 2
+
+print("TESTING: removing an element from an empty array results in an error\n")
+
+a = []
+
+a >> v
+
+v -> type() == "error"
+
+print("TESTING: array concatenation\n")
+
+a = ["foo", "bar"]
+a += ["some", "strings"]
+
+#a == 4 and
+a[2] == "some"
+
+print("TESTING: arrays are heterogeneous\n")
+
+a = [true, false, "str", 3.14]
+
+type(a[0]) == "bool" and
+type(a[2]) == "string" and
+type(a[3]) == "float"
+
+print("TESTING: unpacking arrays\n")
+
+[m, n] = ["foo", "bar"]
+
+m == "foo" and
+n == "bar"
+
+print("TESTING: unpack from a single value\n")
+
+[a, b, c] = 5
+
+a == 5 and
+b == nil and
+c == nil
+
+print("TESTING: unpack more than an array contains\n")
+
+[a, b, c] = [1, 2]
+
+a == 1 and
+b == 2 and
+c == nil
+
+print("TESTING: unpack less than an array contains\n")
+
+[a, b] = [1, 2, 3]
+
+a == 1 and
+b == 2
+
+print("TESTING: unpack into nothing\n")
+
+[] = [true, false, true]
+
+true
+
+print("TESTING: swapping values using array unpacking\n")
+
+m = 17
+n = 23
+
+[m, n] = [n, m]
+
+m == 23 and
+n == 17
+
+print("TESTING: ignoring unpacked values using underscore\n")
+
+b = ["foo", "bar", "baz"]
+[_, _, p] = b
+
+p == "baz"
+
+print("TESTING: an array referencing itself 1\n")
+
+a = [0, 1, 2]
+
+a << a
+
+a[0] == 0 and
+a[3][0] == 0
+
+print("TESTING: an array referencing itself 2\n")
+
+a = [0, 1, 2]
+
+a << a
+
+a[1] = 9
+
+a[1] == 9 and
+a[3][1] == 9
+
+// file: tests/05-objects.element
+
+print("TESTING: object member access\n")
+
+o = [x=1, y=2, z=3]
+
+o.z == 3
+
+print("TESTING: key with the same name as the value works properly\n")
+
+a = 7
+
+o = [a=a]
+
+o.a == a
+
+print("TESTING: getting the size of an object\n")
+
+o = [x=1, y=2, z=3]
+
+#o == 4
+
+print("TESTING: getting the size of an empty object\n")
+
+o = [=]
+
+#o == 1 // the proto member
+
+print("TESTING: getting non-existent object member results in a nil\n")
+
+o = [x=1, y=2, z=3]
+
+o.w == nil
+
+print("TESTING: object member access using the indexing operator\n")
+
+o = [x=1, y=2, z=3]
+
+o["w"] = 7
+o["w"] == 7
+
+print("TESTING: object adding new members at runtime\n")
+
+o = [x=1, y=2, z=3]
+
+o["w"] = 9
+o.x == 1 and o.w == 9
+
+print("TESTING: new object has a nil proto member\n")
+
+o = [x=1, y=2]
+
+o.proto == nil
+
+print("TESTING: setting a proto member\n")
+
+p = [z=3]
+o = [x=1, y=2]
+
+o.proto = p
+
+o.z == 3
+
+print("TESTING: changing the proto object affects our object\n")
+
+p = [z=3]
+o = [x=1, y=2]
+
+o.proto = p
+
+p.z = 5
+
+o.z == 5
+
+print("TESTING: the proto object does not have access to our object's members\n")
+
+p = [z=3]
+o = [x=1, y=2]
+
+o.proto = p
+
+p.x == nil
+
+print("TESTING: size of our object is not affected by the proto object\n")
+
+p = [z=3]
+o = [x=1, y=2]
+
+o.proto = p
+
+#o == 3
+
+print("TESTING: size of the proto object is not affected by our object\n")
+
+p = [z=3]
+o = [x=1, y=2]
+
+o.proto = p
+
+#p == 2
+
+print("TESTING: longer proto chain\n")
+
+o0 = [a=0]
+o1 = [b=1]
+o2 = [c=2]
+o3 = [d=3]
+
+o0.proto = o1
+o1.proto = o2
+o2.proto = o3
+
+o0.a == 0 and
+o0.b == 1 and
+o0.c == 2 and
+o0.d == 3
+
+print("TESTING: missing member in proto chain is nil\n")
+
+p = [z=3]
+o = [x=1, y=2]
+
+o.proto = p
+
+o.w == nil
+
+print("TESTING: adding a new member adds it to the lowest object\n")
+
+p = [z=3]
+o = [x=1, y=2]
+
+o.proto = p
+
+o.w = 7
+
+o.w == 7 and
+p.w == nil
+
+print("TESTING: member lookup should terminate in proto chain cycles 1\n")
+
+p = [y=2]
+o = [x=1]
+
+o.proto = p
+p.proto = o
+
+o.z == nil
+
+print("TESTING: member lookup should terminate in proto chain cycles 2\n")
+
+p = [y=2]
+o = [x=1]
+
+o.proto = p
+p.proto = o
+
+o.z = 3
+
+o.z == 3
+
+print("TESTING: proto chains are only followed if the proto member is an object 1\n")
+
+o = [=]
+o.proto = 7
+
+o.x == nil
+
+print("TESTING: proto chains are only followed if the proto member is an object 2\n")
+
+o = [=]
+o.proto = [1, 2, 3]
+
+o.x == nil
+
+print("TESTING: the this variable refers the owning object\n")
+
+f :: this.a + 1
+
+o0 = [a=6]
+o0.g = f
+
+o1 = [a=9]
+o1.g = f
+
+o0.g() == 7 and
+o1.g() == 10
+
+print("TESTING: the this variable is nil outside of an object context\n")
+
+this == nil
+
+
+// file: tests/06-closures.element
+
+print("TESTING: closure creation\n")
+
+adder:(a)
+{
+	:(b) a + b
+}
+
+f = adder(6)
+g = adder(7)
+
+f(5) == 11 and
+g(3) == 10
+
+print("TESTING: closed-over variables are shared among closures\n")
+
+makeFunctions ::
+{
+	c = 0
+	
+	inc :: c += 1
+	dec :: c -= 1
+	get :: c
+
+	[inc, dec, get]
+}
+
+[inc, dec, get] = makeFunctions()
+
+inc(); inc()
+dec()
+inc(); inc()
+
+get() == 3
+
+print("TESTING: anonymous parameters are not closed-over\n")
+
+f ::
+{
+	:: $ + 1
+}
+
+f(7)(8) == 9
+
+print("TESTING: a more complicated variable capture scenario\n")
+A ::
+{
+	a = 1
+	
+	B:(b)
+	{
+		C:(c)
+		{
+			a + b + c
+		}
+	}
+	
+	a += 1
+	
+	return B
+}
+
+A()(3)(4) == 9
+
+print("TESTING: make sure proper indices of named variables are captured\n")
+
+f:(array)
+	[0, 1, 2, 3] -> each(:(i) array[i] = ::i * 2)
+
+a = [7, 8, 9, 10]
+
+f(a)
+
+a[0]() == 0 and
+a[1]() == 2 and
+a[3]() == 6
+
+// file: tests/07-coroutines.element
+
+
+
+print("TESTING: basic coroutine yield\n")
+
+f ::
+{
+    yield 1
+    yield 2
+    return 4
+}
+
+c = make_coroutine(f)
+
+c() == 1 and
+c() == 2 and
+c() == 4 and
+c() -> type() == "error"
+
+print("TESTING: feed values to a coroutine\n")
+
+f:(a)
+{
+    b = yield
+	c = yield
+    return [a, b, c]
+}
+
+cr = make_coroutine(f)
+
+    cr("a")
+    cr("b")
+v = cr("c")
+
+v[0] == "a" and
+v[1] == "b" and
+v[2] == "c"
+
+print("TESTING: coroutine without yield\n")
+
+f :: return 8
+
+cr = make_coroutine(f)
+
+cr() == 8 and
+cr() -> type() == "error"
+
+print("TESTING: yield from deeper in the call stack\n")
+
+a ::
+{
+	yield 0
+	b()
+}
+
+b ::
+{
+	yield 1
+	c()
+}
+
+c ::
+{
+	yield 2
+}
+
+cr = make_coroutine(a)
+
+cr() == 0 and
+cr() == 1 and
+cr() == 2
+
+print("TESTING: two instances of the same coroutine progress independently\n")
+
+f ::
+{
+	yield "a"
+	yield "b"
+	return "c"
+}
+
+cr0 = make_coroutine(f)
+cr1 = make_coroutine(f)
+
+cr1() == "a" and
+cr1() == "b" and
+cr0() == "a" and
+cr1() == "c" and
+cr0() == "b" and
+cr1() -> type() == "error" and
+cr0() == "c" and
+cr0() -> type() == "error"
+
+print("TESTING: dead coroutine remains dead\n")
+
+f ::
+{
+	yield 1
+	return 1
+}
+
+cr = make_coroutine(f)
+
+cr()
+cr()
+
+cr() -> type() == "error" and
+cr() -> type() == "error" and
+cr() -> type() == "error"
+
+// file: tests/08-iteration.element
+
+print("TESTING: iterate array\n")
+
+s = 0
+
+for( i in [1, 2, 3, 4] )
+	s += i
+
+s == 1 + 2 + 3 + 4
+
+print("TESTING: iterate string\n")
+
+s = ""
+
+for( i in "abcd" )
+	s ~= i
+
+s == "abcd"
+
+print("TESTING: iterate range\n")
+
+s = 0
+
+for( i in range(0, 10, 2) )
+	s += i
+
+s == 0 + 2 + 4 + 6 + 8
+
+print("TESTING: make iterator from array\n")
+
+it = make_iterator([1, 2, 3])
+
+it -> type() == "iterator"
+
+print("TESTING: make iterator from string\n")
+
+it = make_iterator("abc")
+
+it -> type() == "iterator"
+
+print("TESTING: make iterator from coroutine instance\n")
+
+f :: yield 1
+c = make_coroutine(f)
+
+it = make_iterator(c)
+
+it -> type() == "iterator"
+
+
+
+
+print("TESTING: make iterator from object\n")
+
+ones = 
+[	has_next :: true,
+	get_next :: 1
+]
+
+it = make_iterator(ones)
+
+it -> type() == "iterator"
+
+
+print("TESTING: make iterator from iterator\n")
+
+r = range(1, 10)
+
+it = make_iterator(r)
+
+it -> type() == "iterator"
+
+print("TESTING: manually iterate iterator\n")
+
+r = range(1, 3)
+
+iterator_has_next(r) == true and
+iterator_get_next(r) == 1 and
+iterator_has_next(r) == true and
+iterator_get_next(r) == 2 and
+iterator_has_next(r) == false
+
+print("TESTING: factorial object iterator\n")
+
+factorials_iterator:(_n)
+[	i = 0,
+	n = _n,
+	factorial = 1,
+	has_next :: this.i <= this.n,
+	get_next ::
+	{	v = this.factorial
+		this.i += 1
+		this.factorial *= this.i
+		return v
+	}
+] -> make_iterator()
+
+i = factorials_iterator(5)
+
+iterator_get_next(i) == 1 and
+iterator_get_next(i) == 1 and
+iterator_get_next(i) == 2 and
+iterator_get_next(i) == 6
+
+print("TESTING: iterate over coroutine generated values\n")
+
+f ::
+{
+	yield  "a"
+	yield  "b"
+	yield  "c"
+	yield  "d"
+	return "e"
+}
+
+c = f -> make_coroutine()
+a = []
+
+for( i in c )
+	a << i
+
+a[0] == "a" and
+a[2] == "c" and
+a[4] == "e"
+
+print("TESTING: stop and resume coroutine iteration\n")
+
+f ::
+{
+	yield  "a"
+	yield  "b"
+	yield  "c"
+	yield  "d"
+	return "e"
+}
+
+it = f -> make_coroutine() -> make_iterator()
+
+for( i in it )
+	if( i == "c" )
+		break
+
+iterator_has_next(it) and
+iterator_get_next(it) == "d"
+
+// file: tests/09-standard-native-functions.element
+
+print("TESTING: function any() returns true\n")
+
+[false, false, true] -> any(::$ == true) == true
+
+print("TESTING: function any() returns false\n")
+
+[false, false, false] -> any(::$ == true) == false
+
+print("TESTING: function all() returns true\n")
+
+[true, true, true] -> all(::$ == true) == true
+
+print("TESTING: function all() returns false\n")
+
+[true, true, false] -> all(::$ == true) == false
+
+print("TESTING: function map() inverts booleans\n")
+
+a = [true, false, true, true]
+
+b = map(a, ::not $)
+
+a[0] == not b[0] and
+a[1] == not b[1] and
+a[2] == not b[2] and
+a[3] == not b[3]
+
+print("TESTING: function filter() picks true\n")
+
+a = [true, false, false, true]
+
+a = filter(a, ::$)
+
+#a == 2
+
+print("TESTING: function to_upper() 1\n")
+
+to_upper("aBcDeF") == "ABCDEF"
+
+print("TESTING: function to_upper() 2\n")
+
+to_upper("") == ""
+
+print("TESTING: function to_upper() 3\n")
+
+to_upper("9a1B") == "9A1B"
+
+print("TESTING: function to_lower() 1\n")
+
+to_lower("aBcDeF") == "abcdef"
+
+print("TESTING: function to_lower() 2\n")
+
+to_lower("") == ""
+
+print("TESTING: function to_lower() 3\n")
+
+to_lower("B11a") == "b11a"
+
+print("TESTING: function keys() returns the keys from an object 1\n")
+
+o = [aaa=1]
+
+k = keys(o)
+
+#k == 2 // "proto", "aaa"
+
+print("TESTING: function keys() returns the keys from an object 2\n")
+
+o = [aaa=1]
+
+k = keys(o)
+
+k[0] == "aaa" or
+k[1] == "aaa"
+
+print("*all is well*\n")

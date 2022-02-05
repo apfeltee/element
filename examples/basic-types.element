@@ -1,0 +1,47 @@
+n = nil
+i = 42
+f = 3.1415926
+b = true
+s = "string"
+a = [1, 2, 3, "a", "b"]
+o = [x=3, y=4]
+p = :(arg){ print(arg) }
+g = range(1, 5)
+e = make_error("error!")
+
+print( type(n) )
+print( type(i) )
+print( type(f) )
+print( type(b) )
+print( type(s) )
+print( type(a) )
+print( type(o) )
+print( type(p) )
+print( type(g) )
+print( type(e) )
+
+// basic arithmetic operations
+i += 12 * 3 + 7 % 2
+
+f = 2 ^ 3 - f / 2.0
+
+// boolean logic
+b = true and (false or true) xor false
+
+// only 'false' and 'nil' are evaluated to false
+print(not nil)
+
+// concatenation operator converts its arguments to strings
+s = 42 ~ " is the answer!"
+
+// used as an unary operator it converts its argument to string
+s = ~(12 + 12)
+
+// array access and assignment
+a[0] = a[1] + a[2]
+
+// object member access, non-existing members are created when assigned to
+o.length = sqrt( o.x ^ 2 + o.y ^ 2 )
+
+// function call
+p( o.length )
