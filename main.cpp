@@ -15,7 +15,7 @@ int InterpretFile(element::VirtualMachine& vm, const char* fileString)
 {
     element::Value result = vm.evalFile(fileString);
     std::cout << result.asString();
-    vm.getMemoryManager().GarbageCollect();
+    vm.getMemoryManager().collectGarbage();
     std::cout.flush();
     return 0;
 }
@@ -74,13 +74,13 @@ int InterpretREPL(element::VirtualMachine& vm)
                     std::cout << "= ";
                 }
                 std::cout << result.asString() << std::endl;
-                vm.getMemoryManager().GarbageCollect();
+                vm.getMemoryManager().collectGarbage();
                 nowid = varid;
                 varid++;
             }
         }
     }
-    vm.getMemoryManager().GarbageCollect();
+    vm.getMemoryManager().collectGarbage();
 }
 #endif
 
@@ -97,7 +97,7 @@ void DebugPrintFile(const char* fileString, bool ast, bool symbols, bool constan
     element::Logger logger;
     element::Parser parser(logger);
 
-    std::shared_ptr<element::ast::FunctionNode> node = parser.Parse(file);
+    std::shared_ptr<element::ast::FunctionNode> node = parser.parse(file);
 
     if(logger.hasMessages())
     {
@@ -114,8 +114,8 @@ void DebugPrintFile(const char* fileString, bool ast, bool symbols, bool constan
     element::SemanticAnalyzer semanticAnalyzer(logger);
 
     int index = 0;
-    for(const auto& native : element::nativefunctions::GetAllFunctions())
-        semanticAnalyzer.AddNativeFunction(native.name, index++);
+    for(const auto& native : element::Builtins::GetAllFunctions())
+        semanticAnalyzer.addNative(native.name, index++);
 
     semanticAnalyzer.Analyze(node);
 
@@ -162,7 +162,10 @@ int main(int argc, char** argv)
 
     const char* fileString = nullptr;
     element::VirtualMachine vm;
-
+    {
+        element::Value box = vm.getMemoryManager().makeBox();
+        vm.addGlobal("mybox", box);
+    }
     for(int i = 1; i < argc; ++i)
     {
         if(argv[i][0] == '-')

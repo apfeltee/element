@@ -1,22 +1,20 @@
 
 #pragma once
-#include <string>
-#include <vector>
+#include <iostream>
+#include <fstream>
+#include <istream>
 #include <sstream>
 #include <memory>
 #include <deque>
 #include <unordered_map>
-#include <cstring>
+#include <string>
+#include <vector>
 #include <iomanip>
 #include <algorithm>
 #include <map>
 #include <limits>
-#include <istream>
-#include <iostream>
-#include <fstream>
 #include <cmath>
-#include <locale>
-#include <iterator>
+#include <cstring>
 #include <stdarg.h>
 #include <limits.h>
 #include <sys/types.h>
@@ -24,25 +22,25 @@
 
 namespace element
 {
-    class Logger;
-    struct CodeObject;
-    struct String;
-    struct Array;
-    struct Object;
-    struct Function;
-    struct Box;
-    struct Iterator;
-    struct GarbageCollected;
-    struct Error;
-    class VirtualMachine;
-    struct ExecutionContext;
+    class /**/Logger;
+    struct /**/CodeObject;
+    struct /**/String;
+    struct /**/Array;
+    struct /**/Object;
+    struct /**/Function;
+    struct /**/Box;
+    struct /**/Iterator;
+    struct /**/GarbageCollected;
+    struct /**/Error;
+    class /**/VirtualMachine;
+    struct /**/ExecutionContext;
 
     namespace ast
     {
         struct Node;
         struct FunctionNode;
-        struct VariableNode;
-        struct BinaryOperatorNode;
+        struct /**/VariableNode;
+        struct /**/BinaryOperatorNode;
     }// namespace ast
 
     enum Token : int
@@ -611,7 +609,7 @@ namespace element
 
             std::unordered_map<unsigned, unsigned> m_symindices;
             std::vector<Symbol> m_symbols;
-            unsigned mSymbolsOffset;
+            unsigned m_symsoffset;
 
         public:
             Compiler(Logger& logger);
@@ -983,64 +981,49 @@ namespace element
         private:
             std::istream* m_instream;
             Logger& m_logger;
-
             char m_currch;
-
             Token m_currtoken;
-
             Location m_location;
             int m_currcolumn;
-
             std::string m_lastbuf;
-
             std::string m_lastident;
             std::string m_laststring;
             int m_lastinteger;
             int m_lastargidx;
             float m_lastfloat;
             bool m_lastbool;
-
             bool m_muststartover;
 
         public:
             Lexer(Logger& logger);
             Lexer(std::istream& input, Logger& logger);
-
             void setInputStream(std::istream& input);
-
             Token getNextToken();
             Token getNextTokenNoLF();
             Token getCurrentToken() const;
-
-            void RewindDueToMissingElse();
-
+            void rewindBecauseMissingElse();
             const Location& location() const;
-
             const std::string& getLastIdent() const;
             const std::string& GetLastString() const;
             int getLastInteger() const;
-            int GetLastArgumentIndex() const;
+            int getLastArgIndex() const;
             float getLastFloat() const;
             bool getLastBool() const;
 
         protected:
             void reset();
-
             char getNextChar();
-
-            bool HandleCommentOrDivision();
+            bool handleCommentOrDiv();
             bool doWord();
             bool doNumber();
-            bool HandleSingleChar(const char ch, const Token t);
+            bool handleSingleChar(const char ch, const Token t);
             bool doColumn();
             bool doString();
-            bool HandleSubstractOrArrow();
+            bool handleSubOrArray();
             bool doLessOrPush();
             bool doGreaterOrPop();
             bool doCharAndEqual(char ch, Token withoutAssign, Token withAssign);
             bool doDollarSign();
-
-
     };
 
     class Parser
@@ -1058,7 +1041,6 @@ namespace element
                 ET_IndexOperator,
                 ET_FunctionCall,
                 ET_FunctionAssignment,
-
                 ET_Unknown,
             };
 
@@ -1073,34 +1055,27 @@ namespace element
 
         public:
             Parser(Logger& logger);
-
-            auto Parse(std::istream& input) -> std::unique_ptr<ast::FunctionNode>;
+            auto parse(std::istream& input) -> std::unique_ptr<ast::FunctionNode>;
 
         protected:
-            std::shared_ptr<ast::Node> ParseExpression();
-
-            std::shared_ptr<ast::Node> ParsePrimary();
-            std::shared_ptr<ast::Node> ParsePrimitive();
-            std::shared_ptr<ast::Node> ParseVarialbe();
+            std::shared_ptr<ast::Node> parseExpr();
+            std::shared_ptr<ast::Node> parsePrimary();
+            std::shared_ptr<ast::Node> parsePrimitive();
+            std::shared_ptr<ast::Node> parseVariable();
             std::shared_ptr<ast::Node> ParseParenthesis();
-            std::shared_ptr<ast::Node> ParseIndexOperator();
-            std::shared_ptr<ast::Node> ParseBlock();
-            std::shared_ptr<ast::Node> ParseFunction();
+            std::shared_ptr<ast::Node> parseIndexOper();
+            std::shared_ptr<ast::Node> parseBlockStmt();
+            std::shared_ptr<ast::Node> parseFunction();
             std::shared_ptr<ast::Node> ParseArguments();
-            std::shared_ptr<ast::Node> ParseArrayOrObject();
-            std::shared_ptr<ast::Node> ParseIf();
-            std::shared_ptr<ast::Node> ParseWhile();
-            std::shared_ptr<ast::Node> ParseFor();
-            std::shared_ptr<ast::Node> ParseControlExpression();
-
-            ExpressionType CurrentExpressionType(Token prevToken, Token token) const;
-
-            void FoldOperatorStacks(std::vector<Operator>& operators, std::vector<std::shared_ptr<ast::Node>>& operands) const;
-
-            bool IsExpressionTerminator(Token token) const;
+            std::shared_ptr<ast::Node> parseArrayOrObject();
+            std::shared_ptr<ast::Node> parseIfStmt();
+            std::shared_ptr<ast::Node> parseWhileStmt();
+            std::shared_ptr<ast::Node> parseForStmt();
+            std::shared_ptr<ast::Node> parseControlExpr();
+            ExpressionType currentExprType(Token prevToken, Token token) const;
+            void foldOperStacks(std::vector<Operator>& operators, std::vector<std::shared_ptr<ast::Node>>& operands) const;
+            bool isExprTerminator(Token token) const;
     };
-
-
 
     class SemanticAnalyzer
     {
@@ -1122,43 +1097,27 @@ namespace element
 
             struct FunctionScope
             {
-                std::shared_ptr<ast::FunctionNode> node;
+                public:
+                    std::shared_ptr<ast::FunctionNode> node;
+                    std::vector<BlockScope> blocks;
+                    std::vector<std::string> parameters;
+                    std::vector<std::string> freeVariables;
 
-                std::vector<BlockScope> blocks;
-                std::vector<std::string> parameters;
-                std::vector<std::string> freeVariables;
-
-                FunctionScope(const std::shared_ptr<ast::FunctionNode>& n);
+                public:
+                    FunctionScope(const std::shared_ptr<ast::FunctionNode>& n);
             };
 
         private:
             Logger& m_logger;
-
             std::vector<ContextType> m_context;
-
             std::shared_ptr<ast::FunctionNode> m_currfuncnode;
-
-            std::vector<FunctionScope> mFunctionScopes;
-
+            std::vector<FunctionScope> m_funscopes;
             std::vector<std::string> m_globalvars;
-
             std::map<std::string, int> m_natfuncs;
-
-        public:
-            SemanticAnalyzer(Logger& logger);
-
-            void Analyze(const std::shared_ptr<ast::FunctionNode>& node);
-
-            void AddNativeFunction(const std::string& name, int index);
-
-            void resetState();
-
-
 
         protected:
             bool analyzeNode(const std::shared_ptr<ast::Node>& node);
             bool analyzeBinaryOperator(const std::shared_ptr<ast::BinaryOperatorNode>& n);
-
             bool checkAssignable(const std::shared_ptr<ast::Node>& node) const;
             bool isBreakContinueReturn(const std::shared_ptr<ast::Node>& node) const;
             bool isBreakContinue(const std::shared_ptr<ast::Node>& node) const;
@@ -1166,12 +1125,16 @@ namespace element
             bool isInLoop() const;
             bool isInFunction() const;
             bool isInConstruction() const;
-
-            void ResolveNamesInNodes(std::vector<std::shared_ptr<ast::Node>> nodesToProcess);
+            void resolveNamesInNodes(std::vector<std::shared_ptr<ast::Node>> nodesToProcess);
             void resolveName(const std::shared_ptr<ast::VariableNode>& vn);
-            bool TryToFindNameInTheEnclosingFunctions(const std::shared_ptr<ast::VariableNode>& vn);
+            bool tryFindNameInEnclosing(const std::shared_ptr<ast::VariableNode>& vn);
 
-
+        public:
+            SemanticAnalyzer(Logger& logger);
+            void Analyze(const std::shared_ptr<ast::FunctionNode>& node);
+            void addNative(const std::string& name, int index);
+            void addGlobal(const std::string& name, const Value& v);
+            void resetState();
     };
 
     class MemoryManager
@@ -1186,52 +1149,8 @@ namespace element
                 GCS_SweepRest = 4,
             };
 
-        public:
-            MemoryManager();
-            ~MemoryManager();
-
-            void resetState();
-
-            Module& GetDefaultModule();
-            Module& GetModuleForFile(const std::string& filename);
-
-            String* NewString();
-            String* NewString(const std::string& str);
-            String* NewString(const char* str, int size);
-            Array* NewArray();
-            Object* NewObject();
-            Object* NewObject(const Object* other);
-            Function* NewFunction(const Function* other);
-            Function* NewCoroutine(const Function* other);
-            Box* NewBox();
-            Box* NewBox(const Value& value);
-            Iterator* NewIterator(IteratorImplementation* newIterator);
-            Error* NewError(const std::string& errorMessage);
-
-            ExecutionContext* NewRootExecutionContext();
-            bool DeleteRootExecutionContext(ExecutionContext* context);
-
-            void GarbageCollect(int steps = std::numeric_limits<int>::max());
-
-            void UpdateGcRelationship(GarbageCollected* parent, const Value& child);
-
-            int GetHeapObjectsCount(Value::Type type) const;
-
-
-        protected:
-            void DeleteHeap();
-            void AddToHeap(GarbageCollected* gc);
-            void FreeGC(GarbageCollected* gc);
-            void MakeGrayIfNeeded(GarbageCollected* gc, int* steps);
-
-            int MarkRoots(int steps);
-            int Mark(int steps);
-            int SweepHead(int steps);
-            int SweepRest(int steps);
-
         private:
             GarbageCollected* m_heaphead;
-
             GCStage m_gcstage;
             GarbageCollected::State m_currentwhite;
             GarbageCollected::State m_nextwhite;
@@ -1252,75 +1171,44 @@ namespace element
             int m_heapboxescnt;
             int m_heapitercnt;
             int m_heaperrorscnt;
+
+        protected:
+            void deleteHeap();
+            void addToHeap(GarbageCollected* gc);
+            void freeGC(GarbageCollected* gc);
+            void makeGrayIfNeeded(GarbageCollected* gc, int* steps);
+            int markRoots(int steps);
+            int mark(int steps);
+            int sweepHead(int steps);
+            int sweepRest(int steps);
+
+        public:
+            MemoryManager();
+            ~MemoryManager();
+            void resetState();
+            Module& getDefaultModule();
+            Module& getModuleForFile(const std::string& filename);
+            String* makeString();
+            String* makeString(const std::string& str);
+            String* makeString(const char* str, int size);
+            Array* makeArray();
+            Object* makeObject();
+            Object* makeObject(const Object* other);
+            Function* makeFunction(const Function* other);
+            Function* makeCoroutine(const Function* other);
+            Box* makeBox();
+            Box* makeBox(const Value& value);
+            Iterator* makeIterator(IteratorImplementation* newIterator);
+            Error* makeError(const std::string& errorMessage);
+            ExecutionContext* makeRootExecutionContext();
+            bool deleteRootExecutionContext(ExecutionContext* context);
+            void collectGarbage(int steps = std::numeric_limits<int>::max());
+            void updateGCRelationship(GarbageCollected* parent, const Value& child);
+            int heapObjectsCount(Value::Type type) const;
     };
 
     class VirtualMachine
     {
-        public:
-            VirtualMachine();
-
-            void resetState();
-
-            Value evalStream(std::istream& input);
-            Value evalFile(const std::string& filename);
-
-            FileManager& getFileManager();
-            MemoryManager& getMemoryManager();
-
-            void setError(const std::string& errorMessage);
-            bool hasError() const;
-            void clearError();
-
-            void addNative(const std::string& name, Value::NativeFunction function);
-            std::string getVersion() const;
-
-            // value manipulation //////////////////////////////////////////////////////
-            Iterator* makeIterator(const Value& value);
-            unsigned GetHashFromName(const std::string& name);
-            bool nameFromHash(unsigned hash, std::string* name);
-
-            Value getMember(const Value& object, const std::string& memberName);
-            Value getMember(const Value& object, unsigned memberHash) const;
-
-            void setMember(const Value& object, const std::string& memberName, const Value& value);
-            void setMember(const Value& object, unsigned memberHash, const Value& value);
-
-            void pushElement(const Value& array, const Value& value);
-            void addElement(const Value& array, int atIndex, const Value& value);
-
-            Value callFunction(const Value& function, const std::vector<Value>& args);
-
-            Value callMemberFunction(const Value& object, const std::string& memberFunctionName, const std::vector<Value>& args);
-            Value callMemberFunction(const Value& object, unsigned functionHash, const std::vector<Value>& args);
-            Value callMemberFunction(const Value& object, const Value& function, const std::vector<Value>& args);
-
-        protected:
-            Value execBytecode(const char* bytecode, Module& forModule);
-            int parseBytecode(const char* bytecode, Module& forModule);
-
-            Value commonCallFunction(const Value& thisObject, const Value& function, const std::vector<Value>& args);
-
-            Value runCode();
-            void frameRunCode(StackFrame* frame);
-
-            void call(int argumentsCount);
-            void callNative(int argumentsCount);
-
-            void arrayPushElement(Array* array, const Value& newValue);
-            bool arrayPopElement(Array* array, Value* outValue);
-            void arrayLoadElement(const Array* array, int index, Value* outValue);
-            void arrayStoreElement(Array* array, int index, const Value& newValue);
-
-            void LoadMemberFromObject(Object* object, unsigned hash, Value* outValue) const;
-            void objectStoreMember(Object* object, unsigned hash, const Value& newValue);
-
-            bool doBinaryOperation(int opCode);
-
-            void RegisterStandardUtilities();
-
-            void logStacktraceFrom(const StackFrame* frame);
-            void LocationFromFrame(const StackFrame* frame, int* currentLine, std::string* currentFile) const;
-
         private:
             Logger m_logger;
             Parser m_parser;
@@ -1328,22 +1216,67 @@ namespace element
             Compiler m_compiler;
             FileManager m_fileman;
             MemoryManager m_memoryman;
-
-            std::vector<Value> m_constants;// this is the common access point for the 3 deques below
-            std::deque<String> mConstantStrings;
+            // this is the common access point for the 3 deques below
+            std::vector<Value> m_constants;
+            std::deque<String> m_conststrings;
             std::deque<Function> m_constfunctions;
             std::deque<CodeObject> m_constcodeobjects;
-
             std::vector<Value::NativeFunction> m_natfuncs;
             std::unordered_map<unsigned, std::string> m_symnames;
-
             ExecutionContext* m_execctx;
             std::vector<Value>* m_stack;
-
             std::string m_errmessage;
-    };
 
-    namespace nativefunctions
+        protected:
+            Value execBytecode(const char* bytecode, Module& forModule);
+            int parseBytecode(const char* bytecode, Module& forModule);
+            Value commonCallFunction(const Value& thisObject, const Value& function, const std::vector<Value>& args);
+            Value runCode();
+            void frameRunCode(StackFrame* frame);
+            void call(int argumentsCount);
+            void callNative(int argumentsCount);
+            void arrayPushElement(Array* array, const Value& newValue);
+            bool arrayPopElement(Array* array, Value* outValue);
+            void arrayLoadElement(const Array* array, int index, Value* outValue);
+            void arrayStoreElement(Array* array, int index, const Value& newValue);
+            void loadMemberFromObject(Object* object, unsigned hash, Value* outValue) const;
+            void objectStoreMember(Object* object, unsigned hash, const Value& newValue);
+            bool doBinaryOperation(int opCode);
+            void registerBuiltins();
+            void logStacktraceFrom(const StackFrame* frame);
+            void locationFromFrame(const StackFrame* frame, int* currentLine, std::string* currentFile) const;
+
+        public:
+            VirtualMachine();
+            void resetState();
+            Value evalStream(std::istream& input);
+            Value evalFile(const std::string& filename);
+            FileManager& getFileManager();
+            MemoryManager& getMemoryManager();
+            void setError(const std::string& errorMessage);
+            bool hasError() const;
+            void clearError();
+            void addNative(const std::string& name, Value::NativeFunction function);
+            std::string getVersion() const;
+            // value manipulation //////////////////////////////////////////////////////
+            Iterator* makeIterator(const Value& value);
+            unsigned hashFromName(const std::string& name);
+            bool nameFromHash(unsigned hash, std::string* name);
+            Value getMember(const Value& object, const std::string& memberName);
+            Value getMember(const Value& object, unsigned memberHash) const;
+            void setMember(const Value& object, const std::string& memberName, const Value& value);
+            void setMember(const Value& object, unsigned memberHash, const Value& value);
+            void pushElement(const Value& array, const Value& value);
+            void addElement(const Value& array, int atIndex, const Value& value);
+            Value callFunction(const Value& function, const std::vector<Value>& args);
+            Value callMemberFunction(const Value& object, const std::string& memberFunctionName, const std::vector<Value>& args);
+            Value callMemberFunction(const Value& object, unsigned functionHash, const std::vector<Value>& args);
+            Value callMemberFunction(const Value& object, const Value& function, const std::vector<Value>& args);
+
+            void addGlobal(const std::string& name, const Value& v);
+        };
+
+    namespace Builtins
     {
         struct NamedFunction
         {
@@ -1383,7 +1316,7 @@ namespace element
         Value natfn_min(VirtualMachine& vm, const Value& thisObject, const std::vector<Value>& args);
         Value natfn_max(VirtualMachine& vm, const Value& thisObject, const std::vector<Value>& args);
         Value natfn_sort(VirtualMachine& vm, const Value& thisObject, const std::vector<Value>& args);
-        Value Abs(VirtualMachine& vm, const Value& thisObject, const std::vector<Value>& args);
+        Value natfn_abs(VirtualMachine& vm, const Value& thisObject, const std::vector<Value>& args);
         Value natfn_floor(VirtualMachine& vm, const Value& thisObject, const std::vector<Value>& args);
         Value natfn_ceil(VirtualMachine& vm, const Value& thisObject, const std::vector<Value>& args);
         Value natfn_round(VirtualMachine& vm, const Value& thisObject, const std::vector<Value>& args);
@@ -1393,7 +1326,7 @@ namespace element
         Value natfn_tan(VirtualMachine& vm, const Value& thisObject, const std::vector<Value>& args);
         Value natfn_chr(VirtualMachine& vm, const Value& thisObject, const std::vector<Value>& args);
 
-    }// namespace nativefunctions
+    }// namespace Builtins
 
     struct OperatorInfo
     {

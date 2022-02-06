@@ -63,7 +63,7 @@ namespace element
 
         m_location.column = m_currcolumn;
 
-        if(HandleCommentOrDivision())// anything that starts with '/'
+        if(handleCommentOrDiv())// anything that starts with '/'
         {
             if(m_muststartover)
             {
@@ -78,14 +78,14 @@ namespace element
            doNumber() ||// integer or float
            doString() ||// "something..."
            doColumn() ||// : ::
-           HandleSubstractOrArrow() ||// - -= ->
+           handleSubOrArray() ||// - -= ->
            doDollarSign() ||// $ $0 $1 $$
            doLessOrPush() ||// < <= <<
            doGreaterOrPop() ||// > >= >>
-           HandleSingleChar('(', T_LeftParent) || HandleSingleChar(')', T_RightParent) || HandleSingleChar('{', T_LeftBrace)
-           || HandleSingleChar('}', T_RightBrace) || HandleSingleChar('[', T_LeftBracket) || HandleSingleChar(']', T_RightBracket)
-           || HandleSingleChar(';', T_Semicolumn) || HandleSingleChar(',', T_Comma) || HandleSingleChar('.', T_Dot)
-           || HandleSingleChar('#', T_SizeOf) || HandleSingleChar(EOF, T_EOF) || doCharAndEqual('+', T_Add, T_AssignAdd)
+           handleSingleChar('(', T_LeftParent) || handleSingleChar(')', T_RightParent) || handleSingleChar('{', T_LeftBrace)
+           || handleSingleChar('}', T_RightBrace) || handleSingleChar('[', T_LeftBracket) || handleSingleChar(']', T_RightBracket)
+           || handleSingleChar(';', T_Semicolumn) || handleSingleChar(',', T_Comma) || handleSingleChar('.', T_Dot)
+           || handleSingleChar('#', T_SizeOf) || handleSingleChar(EOF, T_EOF) || doCharAndEqual('+', T_Add, T_AssignAdd)
            || doCharAndEqual('*', T_Multiply, T_AssignMultiply) || doCharAndEqual('^', T_Power, T_AssignPower)
            || doCharAndEqual('%', T_Modulo, T_AssignModulo) || doCharAndEqual('~', T_Concatenate, T_AssignConcatenate)
            || doCharAndEqual('=', T_Assignment, T_Equal) || doCharAndEqual('!', T_InvalidToken, T_NotEqual))
@@ -116,10 +116,10 @@ namespace element
     // HACK ////////////////////////////////////////////////////////////////////
     // This is used when parsing 'if' expressions. We need to check if there will
     // be an 'else' clause for the 'if' which will eat the new line, which will
-    // in turn cause trouble for the 'Parser::ParseExpression' function.
+    // in turn cause trouble for the 'Parser::parseExpr' function.
     // To prevent this we will "rewind" the lexer input back to its original state
     // before eating the new line.
-    void Lexer::RewindDueToMissingElse()
+    void Lexer::rewindBecauseMissingElse()
     {
         for(int i = m_lastbuf.size() - 1; i >= 0; --i)
             m_instream->putback(m_lastbuf[i]);
@@ -152,7 +152,7 @@ namespace element
         return m_lastinteger;
     }
 
-    int Lexer::GetLastArgumentIndex() const
+    int Lexer::getLastArgIndex() const
     {
         return m_lastargidx;
     }
@@ -195,7 +195,7 @@ namespace element
         return ch;
     }
 
-    bool Lexer::HandleCommentOrDivision()
+    bool Lexer::handleCommentOrDiv()
     {
         if(m_currch != '/')// this is not a comment or division
             return false;
@@ -425,7 +425,7 @@ namespace element
         return false;
     }
 
-    bool Lexer::HandleSingleChar(const char ch, const Token t)
+    bool Lexer::handleSingleChar(const char ch, const Token t)
     {
         if(m_currch == ch)
         {
@@ -480,7 +480,7 @@ namespace element
         return true;
     }
 
-    bool Lexer::HandleSubstractOrArrow()
+    bool Lexer::handleSubOrArray()
     {
         if(m_currch != '-')
             return false;

@@ -1557,29 +1557,29 @@ a = filter(a, ::$)
 
 #a == 2
 
-print("TESTING: function to_upper() 1\n")
+print("TESTING: function strtoupper() 1\n")
 
-to_upper("aBcDeF") == "ABCDEF"
+strtoupper("aBcDeF") == "ABCDEF"
 
-print("TESTING: function to_upper() 2\n")
+print("TESTING: function stroupper() 2\n")
 
-to_upper("") == ""
+strtoupper("") == ""
 
-print("TESTING: function to_upper() 3\n")
+print("TESTING: function strtoupper() 3\n")
 
-to_upper("9a1B") == "9A1B"
+strtoupper("9a1B") == "9A1B"
 
-print("TESTING: function to_lower() 1\n")
+print("TESTING: function strtolower() 1\n")
 
-to_lower("aBcDeF") == "abcdef"
+strtolower("aBcDeF") == "abcdef"
 
-print("TESTING: function to_lower() 2\n")
+print("TESTING: function strtolower() 2\n")
 
-to_lower("") == ""
+strtolower("") == ""
 
-print("TESTING: function to_lower() 3\n")
+print("TESTING: function strtolower() 3\n")
 
-to_lower("B11a") == "b11a"
+strtolower("B11a") == "b11a"
 
 print("TESTING: function keys() returns the keys from an object 1\n")
 

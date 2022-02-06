@@ -13,19 +13,19 @@ namespace element
     {
     }
 
-    std::unique_ptr<ast::FunctionNode> Parser::Parse(std::istream& input)
+    std::unique_ptr<ast::FunctionNode> Parser::parse(std::istream& input)
     {
+        std::shared_ptr<ast::Node> body;
+        std::vector<std::shared_ptr<ast::Node>> expressions;
         m_lexer.setInputStream(input);
         m_lexer.getNextToken();
 
-        std::vector<std::shared_ptr<ast::Node>> expressions;
-
-        std::shared_ptr<ast::Node> node = ParseExpression();
+        auto node = parseExpr();
 
         while(node)
         {
             expressions.push_back(node);
-            node = ParseExpression();
+            node = parseExpr();
         }
 
         if(m_logger.hasMessages())
@@ -36,7 +36,7 @@ namespace element
             return nullptr;
         }
 
-        std::shared_ptr<ast::Node> body = nullptr;
+        body = nullptr;
 
         if(expressions.size() == 1)
             body = expressions.front();
@@ -47,7 +47,7 @@ namespace element
         return std::make_unique<ast::FunctionNode>(std::vector<std::string>(), body, Location());
     }
 
-    std::shared_ptr<ast::Node> Parser::ParseExpression()
+    std::shared_ptr<ast::Node> Parser::parseExpr()
     {
         Token prevToken = T_InvalidToken;
         Token currentToken = m_lexer.getCurrentToken();
@@ -74,7 +74,7 @@ namespace element
         {
             primaryExpected = false;
             coords = m_lexer.location();
-            expressionType = CurrentExpressionType(prevToken, currentToken);
+            expressionType = currentExprType(prevToken, currentToken);
 
             switch(expressionType)
             {
@@ -86,7 +86,7 @@ namespace element
                     while((op.precedence < operators.back().precedence)
                           || (op.precedence == operators.back().precedence && !op.isRightAssociative))
                     {
-                        FoldOperatorStacks(operators, operands);
+                        foldOperStacks(operators, operands);
                     }
 
                     operators.push_back({ currentToken, op.precedence, expressionType, nullptr, coords });
@@ -103,10 +103,10 @@ namespace element
                     while((op.precedence < operators.back().precedence)
                           || (op.precedence == operators.back().precedence && !op.isRightAssociative))
                     {
-                        FoldOperatorStacks(operators, operands);
+                        foldOperStacks(operators, operands);
                     }
 
-                    std::shared_ptr<ast::Node> auxNode = ParseIndexOperator();
+                    auto auxNode = parseIndexOper();
 
                     if(!auxNode)// propagate error
                     {
@@ -126,10 +126,10 @@ namespace element
                     while((op.precedence < operators.back().precedence)
                           || (op.precedence == operators.back().precedence && !op.isRightAssociative))
                     {
-                        FoldOperatorStacks(operators, operands);
+                        foldOperStacks(operators, operands);
                     }
 
-                    std::shared_ptr<ast::Node> auxNode = ParseArguments();
+                    auto auxNode = ParseArguments();
 
                     if(!auxNode)// propagate error
                     {
@@ -149,10 +149,10 @@ namespace element
                     while((op.precedence < operators.back().precedence)
                           || (op.precedence == operators.back().precedence && !op.isRightAssociative))
                     {
-                        FoldOperatorStacks(operators, operands);
+                        foldOperStacks(operators, operands);
                     }
 
-                    std::shared_ptr<ast::Node> auxNode = ParseFunction();
+                    auto auxNode = parseFunction();
 
                     if(!auxNode)// propagate error
                     {
@@ -167,7 +167,7 @@ namespace element
 
                 case ET_PrimaryExpression:
                 {
-                    std::shared_ptr<ast::Node> node = ParsePrimary();
+                    auto node = parsePrimary();
 
                     if(!node)// propagate error
                     {
@@ -192,19 +192,19 @@ namespace element
 
             prevToken = currentToken;
             currentToken = m_lexer.getCurrentToken();
-        } while(!IsExpressionTerminator(currentToken) || primaryExpected);
+        } while(!isExprTerminator(currentToken) || primaryExpected);
 
         // no more of this expression, fold everything to a single node
         while(operands.size() > 1 ||// last thing left is the result
               operators.size() > 1)// parse all, leave only the sentinel
         {
-            FoldOperatorStacks(operators, operands);
+            foldOperStacks(operators, operands);
         }
 
         return operands.back();
     }
 
-    std::shared_ptr<ast::Node> Parser::ParsePrimary()
+    std::shared_ptr<ast::Node> Parser::parsePrimary()
     {
         switch(m_lexer.getCurrentToken())
         {
@@ -213,42 +213,42 @@ namespace element
             case T_Float:
             case T_String:
             case T_Bool:
-                return ParsePrimitive();
+                return parsePrimitive();
 
             case T_This:
             case T_Argument:
             case T_ArgumentList:
             case T_Identifier:
             case T_Underscore:
-                return ParseVarialbe();
+                return parseVariable();
 
             case T_LeftParent:
                 return ParseParenthesis();
 
             case T_LeftBrace:
-                return ParseBlock();
+                return parseBlockStmt();
 
             case T_LeftBracket:
-                return ParseArrayOrObject();
+                return parseArrayOrObject();
 
             case T_Column:
             case T_DoubleColumn:
-                return ParseFunction();
+                return parseFunction();
 
             case T_If:
-                return ParseIf();
+                return parseIfStmt();
 
             case T_While:
-                return ParseWhile();
+                return parseWhileStmt();
 
             case T_For:
-                return ParseFor();
+                return parseForStmt();
 
             case T_Return:
             case T_Break:
             case T_Continue:
             case T_Yield:
-                return ParseControlExpression();
+                return parseControlExpr();
 
             default:
                 m_logger.pushError(m_lexer.location(),
@@ -257,7 +257,7 @@ namespace element
         }
     }
 
-    std::shared_ptr<ast::Node> Parser::ParsePrimitive()
+    std::shared_ptr<ast::Node> Parser::parsePrimitive()
     {
         Location coords = m_lexer.location();
 
@@ -298,7 +298,7 @@ namespace element
         }
     }
 
-    std::shared_ptr<ast::Node> Parser::ParseVarialbe()
+    std::shared_ptr<ast::Node> Parser::parseVariable()
     {
         Location coords = m_lexer.location();
 
@@ -311,7 +311,7 @@ namespace element
             }
             case T_Argument:
             {
-                int n = m_lexer.GetLastArgumentIndex();
+                int n = m_lexer.getLastArgIndex();
                 m_lexer.getNextToken();// eat $
                 return std::make_shared<ast::VariableNode>(n, coords);
             }
@@ -341,13 +341,13 @@ namespace element
     {
         m_lexer.getNextTokenNoLF();// eat (
 
-        if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+        if(isExprTerminator(m_lexer.getCurrentToken()))
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
             return nullptr;
         }
 
-        std::shared_ptr<ast::Node> node = ParseExpression();
+        auto node = parseExpr();
 
         if(!node)
             return nullptr;
@@ -364,17 +364,17 @@ namespace element
         return node;
     }
 
-    std::shared_ptr<ast::Node> Parser::ParseIndexOperator()
+    std::shared_ptr<ast::Node> Parser::parseIndexOper()
     {
         m_lexer.getNextTokenNoLF();// eat [
 
-        if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+        if(isExprTerminator(m_lexer.getCurrentToken()))
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
             return nullptr;
         }
 
-        std::shared_ptr<ast::Node> node = ParseExpression();
+        auto node = parseExpr();
 
         if(!node)
             return nullptr;
@@ -391,7 +391,7 @@ namespace element
         return node;
     }
 
-    std::shared_ptr<ast::Node> Parser::ParseBlock()
+    std::shared_ptr<ast::Node> Parser::parseBlockStmt()
     {
         Location coords = m_lexer.location();
 
@@ -401,7 +401,7 @@ namespace element
 
         while(m_lexer.getCurrentToken() != T_RightBrace)
         {
-            std::shared_ptr<ast::Node> node = ParseExpression();
+            auto node = parseExpr();
 
             if(!node)
             {
@@ -426,7 +426,7 @@ namespace element
         return std::make_shared<ast::BlockNode>(nodes, coords);
     }
 
-    std::shared_ptr<ast::Node> Parser::ParseFunction()
+    std::shared_ptr<ast::Node> Parser::parseFunction()
     {
         Location coords = m_lexer.location();
         std::vector<std::string> namedParameters;
@@ -473,13 +473,13 @@ namespace element
             m_lexer.getNextTokenNoLF();// eat )
         }
 
-        if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+        if(isExprTerminator(m_lexer.getCurrentToken()))
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
             return nullptr;
         }
 
-        std::shared_ptr<ast::Node> body = ParseExpression();
+        auto body = parseExpr();
 
         if(!body)
             return nullptr;
@@ -496,15 +496,15 @@ namespace element
 
         while(m_lexer.getCurrentToken() != T_RightParent)
         {
-            if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+            if(isExprTerminator(m_lexer.getCurrentToken()))
             {
                 m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
-                for(std::shared_ptr<ast::Node> trash : arguments)
+                for(auto trash : arguments)
                     trash.reset();
                 return nullptr;
             }
 
-            std::shared_ptr<ast::Node> argument = ParseExpression();
+            auto argument = parseExpr();
 
             if(!argument)
             {
@@ -536,7 +536,7 @@ namespace element
         return std::make_shared<ast::ArgumentsNode>(arguments, coords);
     }
 
-    std::shared_ptr<ast::Node> Parser::ParseArrayOrObject()
+    std::shared_ptr<ast::Node> Parser::parseArrayOrObject()
     {
         Location coords = m_lexer.location();
         m_lexer.getNextTokenNoLF();// eat [
@@ -570,7 +570,7 @@ namespace element
 
         while(m_lexer.getCurrentToken() != T_RightBracket)
         {
-            if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+            if(isExprTerminator(m_lexer.getCurrentToken()))
             {
                 m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
                 for(auto trash : keys)
@@ -580,7 +580,7 @@ namespace element
                 return nullptr;
             }
 
-            std::shared_ptr<ast::Node> element = ParseExpression();
+            auto element = parseExpr();
 
             if(!element)
             {
@@ -656,200 +656,172 @@ namespace element
         }
     }
 
-    std::shared_ptr<ast::Node> Parser::ParseIf()
+    std::shared_ptr<ast::Node> Parser::parseIfStmt()
     {
-        Location coords = m_lexer.location();
+        std::shared_ptr<ast::Node> elsePath;
+        auto coords = m_lexer.location();
         m_lexer.getNextTokenNoLF();// eat if
-
         if(m_lexer.getCurrentToken() != T_LeftParent)
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expected (");
             return nullptr;// Syntax error
         }
-
         m_lexer.getNextTokenNoLF();// eat (
-
-        if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+        if(isExprTerminator(m_lexer.getCurrentToken()))
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
             return nullptr;
         }
-
-        std::shared_ptr<ast::Node> condition = ParseExpression();
-
+        auto condition = parseExpr();
         if(!condition)
+        {
             return nullptr;
-
+        }
         if(m_lexer.getCurrentToken() != T_RightParent)
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expected )");
             condition.reset();
             return nullptr;// Syntax error
         }
-
         m_lexer.getNextTokenNoLF();// eat )
-
-        if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+        if(isExprTerminator(m_lexer.getCurrentToken()))
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
             condition.reset();
             return nullptr;
         }
-
-        std::shared_ptr<ast::Node> thenPath = ParseExpression();
-
+        auto thenPath = parseExpr();
         if(!thenPath)// propagate error
         {
             condition.reset();
             return nullptr;
         }
-
-        std::shared_ptr<ast::Node> elsePath = nullptr;
-
+        elsePath = nullptr;
         // HACK ////////////////////////////////////////////////////////////////////
         // we need to check if there will be an 'else' clause, but it may be after
         // the new line, so we have to eat it. This is troublesome because later the
-        // 'ParseExpression' function will not know to terminate the expression.
+        // 'parseExpr' function will not know to terminate the expression.
         // To prevent this we will "rewind" the lexer input back to its original state.
         bool shouldRewind = true;
         if(m_lexer.getCurrentToken() == T_NewLine)
+        {
             m_lexer.getNextTokenNoLF();// eat \n
-
+        }
         if(m_lexer.getCurrentToken() == T_Elif)
         {
-            elsePath = ParseIf();
-
+            elsePath = parseIfStmt();
             if(!elsePath)
             {
                 condition.reset();
                 thenPath.reset();
                 return nullptr;
             }
-
             shouldRewind = false;
         }
         else if(m_lexer.getCurrentToken() == T_Else)
         {
             m_lexer.getNextTokenNoLF();// eat else
 
-            if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+            if(isExprTerminator(m_lexer.getCurrentToken()))
             {
                 m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
                 condition.reset();
                 thenPath.reset();
                 return nullptr;
             }
-
-            elsePath = ParseExpression();
-
+            elsePath = parseExpr();
             if(!elsePath)
             {
                 condition.reset();
                 thenPath.reset();
                 return nullptr;
             }
-
             shouldRewind = false;
         }
-
         if(shouldRewind)
-            m_lexer.RewindDueToMissingElse();
-
+        {
+            m_lexer.rewindBecauseMissingElse();
+        }
         return std::make_shared<ast::IfNode>(condition, thenPath, elsePath, coords);
     }
 
-    std::shared_ptr<ast::Node> Parser::ParseWhile()
+    std::shared_ptr<ast::Node> Parser::parseWhileStmt()
     {
-        Location coords = m_lexer.location();
+        auto coords = m_lexer.location();
         m_lexer.getNextTokenNoLF();// eat while
-
         if(m_lexer.getCurrentToken() != T_LeftParent)
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expected (");
             return nullptr;
         }
-
         m_lexer.getNextTokenNoLF();// eat (
-
-        if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+        if(isExprTerminator(m_lexer.getCurrentToken()))
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
             return nullptr;
         }
-
-        std::shared_ptr<ast::Node> condition = ParseExpression();
-
+        auto condition = parseExpr();
         if(!condition)
+        {
             return nullptr;
-
+        }
         if(m_lexer.getCurrentToken() != T_RightParent)
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expected )");
             condition.reset();
             return nullptr;
         }
-
         m_lexer.getNextTokenNoLF();// eat )
-
-        if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+        if(isExprTerminator(m_lexer.getCurrentToken()))
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
             condition.reset();
             return nullptr;
         }
-
-        std::shared_ptr<ast::Node> body = ParseExpression();
-
+        auto body = parseExpr();
         if(!body)// propagate error
         {
             condition.reset();
             return nullptr;
         }
-
         return std::make_shared<ast::WhileNode>(condition, body, coords);
     }
 
-    std::shared_ptr<ast::Node> Parser::ParseFor()
+    std::shared_ptr<ast::Node> Parser::parseForStmt()
     {
-        Location coords = m_lexer.location();
+        auto coords = m_lexer.location();
         m_lexer.getNextTokenNoLF();// eat for
-
         if(m_lexer.getCurrentToken() != T_LeftParent)
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expected (");
             return nullptr;
         }
-
-        m_lexer.getNextTokenNoLF();// eat (
-
-        if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+        // eat (
+        m_lexer.getNextTokenNoLF();
+        if(isExprTerminator(m_lexer.getCurrentToken()))
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
             return nullptr;
         }
-
-        std::shared_ptr<ast::Node> iteratorVariable = ParseExpression();
-
+        auto iteratorVariable = parseExpr();
         if(!iteratorVariable)
+        {
             return nullptr;
-
+        }
         if(m_lexer.getCurrentToken() != T_In)
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expected 'in'");
             iteratorVariable.reset();
             return nullptr;
         }
-
         m_lexer.getNextTokenNoLF();// eat in
-
-        if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+        if(isExprTerminator(m_lexer.getCurrentToken()))
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
             iteratorVariable.reset();
             return nullptr;
         }
-
-        std::shared_ptr<ast::Node> iteratedExpression = ParseExpression();
+        auto iteratedExpression = parseExpr();
 
         if(!iteratedExpression)
         {
@@ -864,19 +836,15 @@ namespace element
             iteratedExpression.reset();
             return nullptr;
         }
-
         m_lexer.getNextTokenNoLF();// eat )
-
-        if(IsExpressionTerminator(m_lexer.getCurrentToken()))
+        if(isExprTerminator(m_lexer.getCurrentToken()))
         {
             m_logger.pushError(m_lexer.location(), "Syntax error: expression expected");
             iteratorVariable.reset();
             iteratedExpression.reset();
             return nullptr;
         }
-
-        std::shared_ptr<ast::Node> body = ParseExpression();
-
+        auto body = parseExpr();
         if(!body)// propagate error
         {
             iteratorVariable.reset();
@@ -887,23 +855,22 @@ namespace element
         return std::make_shared<ast::ForNode>(iteratorVariable, iteratedExpression, body, coords);
     }
 
-    std::shared_ptr<ast::Node> Parser::ParseControlExpression()
+    std::shared_ptr<ast::Node> Parser::parseControlExpr()
     {
-        Location coords = m_lexer.location();
-        Token controlType = m_lexer.getCurrentToken();
-
-        Token token = m_lexer.getNextToken();// eat the control expression
-
-        std::shared_ptr<ast::Node> value = nullptr;
-
-        if(!IsExpressionTerminator(token))
+        std::shared_ptr<ast::Node> value;
+        auto coords = m_lexer.location();
+        auto controlType = m_lexer.getCurrentToken();
+        auto token = m_lexer.getNextToken();// eat the control expression
+        value = nullptr;
+        if(!isExprTerminator(token))
         {
-            value = ParseExpression();
-
-            if(!value)// propagate error
+            value = parseExpr();
+            // propagate error
+            if(!value)
+            {
                 return nullptr;
+            }
         }
-
         switch(controlType)
         {
             case T_Return:
@@ -920,7 +887,7 @@ namespace element
         }
     }
 
-    Parser::ExpressionType Parser::CurrentExpressionType(Token prevToken, Token token) const
+    Parser::ExpressionType Parser::currentExprType(Token prevToken, Token token) const
     {
         static const Token operators[] = {
             T_Add,
@@ -1012,56 +979,51 @@ namespace element
         return ET_Unknown;
     }
 
-    void Parser::FoldOperatorStacks(std::vector<Operator>& operators, std::vector<std::shared_ptr<ast::Node>>& operands) const
+    void Parser::foldOperStacks(std::vector<Operator>& operators, std::vector<std::shared_ptr<ast::Node>>& operands) const
     {
-        std::shared_ptr<ast::Node> newNode = nullptr;
+        std::shared_ptr<ast::Node> newNode;
+        newNode = nullptr;
 
-        Operator topOperator = operators.back();
+        auto topOperator = operators.back();
         operators.pop_back();
 
         switch(topOperator.type)
         {
             case ET_BinaryOperator:
-            {
-                std::shared_ptr<ast::Node> rhs = operands.back();
-                operands.pop_back();
-                std::shared_ptr<ast::Node> lhs = operands.back();
-                operands.pop_back();
-
-                newNode = std::make_shared<ast::BinaryOperatorNode>(topOperator.token, lhs, rhs, topOperator.coords);
+                {
+                    auto rhs = operands.back();
+                    operands.pop_back();
+                    auto lhs = operands.back();
+                    operands.pop_back();
+                    newNode = std::make_shared<ast::BinaryOperatorNode>(topOperator.token, lhs, rhs, topOperator.coords);
+                }
                 break;
-            }
-
             case ET_UnaryOperator:
-            {
-                std::shared_ptr<ast::Node> operand = operands.back();
-                operands.pop_back();
-
-                newNode = std::make_shared<ast::UnaryOperatorNode>(topOperator.token, operand, topOperator.coords);
+                {
+                    auto operand = operands.back();
+                    operands.pop_back();
+                    newNode = std::make_shared<ast::UnaryOperatorNode>(topOperator.token, operand, topOperator.coords);
+                }
                 break;
-            }
-
             case ET_IndexOperator:
             {
-                std::shared_ptr<ast::Node> operand = operands.back();
+                auto operand = operands.back();
                 operands.pop_back();
-
                 newNode = std::make_shared<ast::BinaryOperatorNode>(topOperator.token, operand, topOperator.auxNode, topOperator.coords);
                 break;
             }
 
             case ET_FunctionCall:
             {
-                std::shared_ptr<ast::Node> function = operands.back();
+                auto function = operands.back();
                 operands.pop_back();
-
                 newNode = std::make_shared<ast::FunctionCallNode>(function, topOperator.auxNode, topOperator.coords);
                 break;
             }
 
             case ET_FunctionAssignment:
             {
-                std::shared_ptr<ast::Node> lhs = operands.back();
+                auto lhs = operands.back();
                 operands.pop_back();
 
                 newNode = std::make_shared<ast::BinaryOperatorNode>(T_Assignment, lhs, topOperator.auxNode, topOperator.coords);
@@ -1074,7 +1036,7 @@ namespace element
         operands.push_back(newNode);
     }
 
-    bool Parser::IsExpressionTerminator(Token token) const
+    bool Parser::isExprTerminator(Token token) const
     {
         return token == T_NewLine || token == T_Semicolumn || token == T_Comma || token == T_RightParent || token == T_RightBracket
                || token == T_RightBrace || token == T_Else || token == T_Elif || token == T_In || token == T_EOF;

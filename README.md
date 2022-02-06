@@ -1,3 +1,6 @@
+
+NB. the original repo origin is <https://github.com/KaloyanKaludov/Element>
+
 ## Element
 
 A toy programming language. 

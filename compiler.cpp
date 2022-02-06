@@ -10,7 +10,7 @@ using namespace std::string_literals;
 namespace element
 {
     Compiler::Compiler(Logger& logger)
-    : m_logger(logger), m_currfunction(nullptr), m_constoffset(0), mSymbolsOffset(0)
+    : m_logger(logger), m_currfunction(nullptr), m_constoffset(0), m_symsoffset(0)
     {
         resetState();
     }
@@ -42,7 +42,7 @@ namespace element
         m_symbols.clear();
         m_symbols.emplace_back("proto", Symbol::ProtoHash);
 
-        mSymbolsOffset = 0;
+        m_symsoffset = 0;
     }
 
     void Compiler::emitInstructions(const std::shared_ptr<ast::Node>& node, bool keepValue)
@@ -1140,7 +1140,7 @@ namespace element
         unsigned symbolsCount = m_symbols.size();
         unsigned symbolsSize = 0;
 
-        for(unsigned i = mSymbolsOffset; i < symbolsCount; ++i)
+        for(unsigned i = m_symsoffset; i < symbolsCount; ++i)
             symbolsSize += m_symbols[i].getSize();
 
         unsigned constantsCount = m_constants.size();
@@ -1159,16 +1159,16 @@ namespace element
 
         // write symbols count
         ++p;
-        *p = symbolsCount - mSymbolsOffset;
+        *p = symbolsCount - m_symsoffset;
 
         // write all symbols offset
         ++p;
-        *p = mSymbolsOffset;
+        *p = m_symsoffset;
 
         // write all symbols
         char* c = binaryData.get() + 3 * sizeof(unsigned);
 
-        for(unsigned i = mSymbolsOffset; i < symbolsCount; ++i)
+        for(unsigned i = m_symsoffset; i < symbolsCount; ++i)
             c = m_symbols[i].writeSymbol(c);
 
         // write constants size
@@ -1190,7 +1190,7 @@ namespace element
             c = m_constants[i].writeConst(c);
 
         // prepare for the next build iteration
-        mSymbolsOffset = symbolsCount;
+        m_symsoffset = symbolsCount;
         m_constoffset = constantsCount;
 
         return binaryData;

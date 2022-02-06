@@ -129,7 +129,7 @@ namespace element
 
             char c = self->str->str[self->currentIndex++];
 
-            return vm.getMemoryManager().NewString(&c, 1);
+            return vm.getMemoryManager().makeString(&c, 1);
         });
     }
 

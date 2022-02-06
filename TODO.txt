@@ -1,0 +1,4 @@
+
+- figure out how to define global variables. there's currently no obvious road to that, at least I have yet to find one.
+- figure out how to retrieve, modify, and store names. this ties in with above.
+

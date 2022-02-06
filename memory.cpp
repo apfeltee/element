@@ -14,7 +14,7 @@ namespace element
 
     MemoryManager::~MemoryManager()
     {
-        DeleteHeap();
+        deleteHeap();
     }
 
     void MemoryManager::resetState()
@@ -24,7 +24,7 @@ namespace element
         m_modules.clear();
         m_excontexts.clear();
 
-        DeleteHeap();
+        deleteHeap();
 
         m_gcstage = GCS_Ready;
         m_currentwhite = GarbageCollected::GC_White0;
@@ -41,12 +41,12 @@ namespace element
         m_heaperrorscnt = 0;
     }
 
-    Module& MemoryManager::GetDefaultModule()
+    Module& MemoryManager::getDefaultModule()
     {
         return m_defmodule;
     }
 
-    Module& MemoryManager::GetModuleForFile(const std::string& filename)
+    Module& MemoryManager::getModuleForFile(const std::string& filename)
     {
         Module& module = m_modules[filename];
 
@@ -56,140 +56,140 @@ namespace element
         return module;
     }
 
-    String* MemoryManager::NewString()
+    String* MemoryManager::makeString()
     {
         String* newString = new String();
 
-        AddToHeap(newString);
+        addToHeap(newString);
 
         ++m_heapstringscnt;
 
         return newString;
     }
 
-    String* MemoryManager::NewString(const std::string& str)
+    String* MemoryManager::makeString(const std::string& str)
     {
         String* newString = new String(str);
 
-        AddToHeap(newString);
+        addToHeap(newString);
 
         ++m_heapstringscnt;
 
         return newString;
     }
 
-    String* MemoryManager::NewString(const char* str, int size)
+    String* MemoryManager::makeString(const char* str, int size)
     {
         String* newString = new String(str, size);
 
-        AddToHeap(newString);
+        addToHeap(newString);
 
         ++m_heapstringscnt;
 
         return newString;
     }
 
-    Array* MemoryManager::NewArray()
+    Array* MemoryManager::makeArray()
     {
         Array* newArray = new Array();
 
-        AddToHeap(newArray);
+        addToHeap(newArray);
 
         ++m_heaparrayscnt;
 
         return newArray;
     }
 
-    Object* MemoryManager::NewObject()
+    Object* MemoryManager::makeObject()
     {
         Object* newObject = new Object();
 
-        AddToHeap(newObject);
+        addToHeap(newObject);
 
         ++m_heapobjectscnt;
 
         return newObject;
     }
 
-    Object* MemoryManager::NewObject(const Object* other)
+    Object* MemoryManager::makeObject(const Object* other)
     {
         Object* newObject = new Object();
         *newObject = *other;
 
-        AddToHeap(newObject);
+        addToHeap(newObject);
 
         ++m_heapobjectscnt;
 
         return newObject;
     }
 
-    Function* MemoryManager::NewFunction(const Function* other)
+    Function* MemoryManager::makeFunction(const Function* other)
     {
         Function* newFunction = new Function(other);
 
-        AddToHeap(newFunction);
+        addToHeap(newFunction);
 
         ++m_heapfunctionscnt;
 
         return newFunction;
     }
 
-    Function* MemoryManager::NewCoroutine(const Function* other)
+    Function* MemoryManager::makeCoroutine(const Function* other)
     {
-        Function* newFunction = NewFunction(other);
+        Function* newFunction = makeFunction(other);
 
         newFunction->executionContext = new ExecutionContext();
 
         return newFunction;
     }
 
-    Box* MemoryManager::NewBox()
+    Box* MemoryManager::makeBox()
     {
         Box* newBox = new Box();
 
-        AddToHeap(newBox);
+        addToHeap(newBox);
 
         ++m_heapboxescnt;
 
         return newBox;
     }
 
-    Box* MemoryManager::NewBox(const Value& value)
+    Box* MemoryManager::makeBox(const Value& value)
     {
         Box* newBox = new Box();
 
         newBox->value = value;
 
-        AddToHeap(newBox);
+        addToHeap(newBox);
 
         ++m_heapboxescnt;
 
         return newBox;
     }
 
-    Iterator* MemoryManager::NewIterator(IteratorImplementation* newIterator)
+    Iterator* MemoryManager::makeIterator(IteratorImplementation* newIterator)
     {
         Iterator* iterator = new Iterator(newIterator);
 
-        AddToHeap(iterator);
+        addToHeap(iterator);
 
         ++m_heapitercnt;
 
         return iterator;
     }
 
-    Error* MemoryManager::NewError(const std::string& errorMessage)
+    Error* MemoryManager::makeError(const std::string& errorMessage)
     {
         Error* newError = new Error(errorMessage);
 
-        AddToHeap(newError);
+        addToHeap(newError);
 
         ++m_heaperrorscnt;
 
         return newError;
     }
 
-    ExecutionContext* MemoryManager::NewRootExecutionContext()
+    ExecutionContext* MemoryManager::makeRootExecutionContext()
     {
         ExecutionContext* newContext = new ExecutionContext();
 
@@ -198,7 +198,7 @@ namespace element
         return newContext;
     }
 
-    bool MemoryManager::DeleteRootExecutionContext(ExecutionContext* context)
+    bool MemoryManager::deleteRootExecutionContext(ExecutionContext* context)
     {
         auto it = std::find(m_excontexts.begin(), m_excontexts.end(), context);
 
@@ -212,7 +212,7 @@ namespace element
         return false;
     }
 
-    void MemoryManager::GarbageCollect(int steps)
+    void MemoryManager::collectGarbage(int steps)
     {
         switch(m_gcstage)
         {
@@ -222,32 +222,32 @@ namespace element
                 m_gcstage = GCS_MarkRoots;
 
             case GCS_MarkRoots:
-                steps = MarkRoots(steps);
+                steps = markRoots(steps);
                 if(steps <= 0)
                     return;
                 m_gcstage = GCS_Mark;
 
             case GCS_Mark:
-                steps = Mark(steps);
+                steps = mark(steps);
                 if(steps <= 0)
                     return;
                 m_gcstage = GCS_SweepHead;
 
             case GCS_SweepHead:
-                steps = SweepHead(steps);
+                steps = sweepHead(steps);
                 if(steps <= 0)
                     return;
                 m_gcstage = GCS_SweepRest;
 
             case GCS_SweepRest:
-                steps = SweepRest(steps);
+                steps = sweepRest(steps);
                 if(steps <= 0)
                     return;
                 m_gcstage = GCS_Ready;
         }
     }
 
-    void MemoryManager::UpdateGcRelationship(GarbageCollected* parent, const Value& child)
+    void MemoryManager::updateGCRelationship(GarbageCollected* parent, const Value& child)
     {
         // the tri-color invariant states that at no point shall
         // a black node be directly connected to a white node
@@ -258,7 +258,7 @@ namespace element
         }
     }
 
-    int MemoryManager::GetHeapObjectsCount(Value::Type type) const
+    int MemoryManager::heapObjectsCount(Value::Type type) const
     {
         switch(type)
         {
@@ -281,18 +281,18 @@ namespace element
         }
     }
 
-    void MemoryManager::DeleteHeap()
+    void MemoryManager::deleteHeap()
     {
         while(m_heaphead)
         {
             GarbageCollected* next = m_heaphead->next;
             ;
-            FreeGC(m_heaphead);
+            freeGC(m_heaphead);
             m_heaphead = next;
         }
     }
 
-    void MemoryManager::AddToHeap(GarbageCollected* gc)
+    void MemoryManager::addToHeap(GarbageCollected* gc)
     {
         gc->state = m_nextwhite;
 
@@ -302,7 +302,7 @@ namespace element
         m_heaphead = gc;
     }
 
-    void MemoryManager::FreeGC(GarbageCollected* gc)
+    void MemoryManager::freeGC(GarbageCollected* gc)
     {
         switch(gc->type)
         {
@@ -350,7 +350,7 @@ namespace element
         }
     }
 
-    void MemoryManager::MakeGrayIfNeeded(GarbageCollected* gc, int* steps)
+    void MemoryManager::makeGrayIfNeeded(GarbageCollected* gc, int* steps)
     {
         if(gc->state == m_currentwhite)
         {
@@ -361,16 +361,16 @@ namespace element
         }
     }
 
-    int MemoryManager::MarkRoots(int steps)
+    int MemoryManager::markRoots(int steps)
     {
         for(Value& global : m_defmodule.globals)
             if(global.isManaged())
-                MakeGrayIfNeeded(global.garbageCollected, &steps);
+                makeGrayIfNeeded(global.garbageCollected, &steps);
 
         for(auto& kvp : m_modules)
             for(Value& global : kvp.second.globals)
                 if(global.isManaged())
-                    MakeGrayIfNeeded(global.garbageCollected, &steps);
+                    makeGrayIfNeeded(global.garbageCollected, &steps);
 
         for(ExecutionContext* context : m_excontexts)
         {
@@ -378,22 +378,22 @@ namespace element
             {
                 for(Value& local : frame.variables)
                     if(local.isManaged())
-                        MakeGrayIfNeeded(local.garbageCollected, &steps);
+                        makeGrayIfNeeded(local.garbageCollected, &steps);
 
                 for(Value& anonymousParameter : frame.anonymousParameters.elements)
                     if(anonymousParameter.isManaged())
-                        MakeGrayIfNeeded(anonymousParameter.garbageCollected, &steps);
+                        makeGrayIfNeeded(anonymousParameter.garbageCollected, &steps);
             }
 
             for(Value& value : context->stack)
                 if(value.isManaged())
-                    MakeGrayIfNeeded(value.garbageCollected, &steps);
+                    makeGrayIfNeeded(value.garbageCollected, &steps);
         }
 
         return steps;
     }
 
-    int MemoryManager::Mark(int steps)
+    int MemoryManager::mark(int steps)
     {
         GarbageCollected* currentObject = nullptr;
 
@@ -409,13 +409,13 @@ namespace element
                 case Value::VT_Array:
                     for(Value& element : ((Array*)currentObject)->elements)
                         if(element.isManaged())
-                            MakeGrayIfNeeded(element.garbageCollected, &steps);
+                            makeGrayIfNeeded(element.garbageCollected, &steps);
                     break;
 
                 case Value::VT_Object:
                     for(Object::Member& member : ((Object*)currentObject)->members)
                         if(member.value.isManaged())
-                            MakeGrayIfNeeded(member.value.garbageCollected, &steps);
+                            makeGrayIfNeeded(member.value.garbageCollected, &steps);
                     break;
 
                 case Value::VT_Function:
@@ -423,7 +423,7 @@ namespace element
                     Function* function = ((Function*)currentObject);
                     for(Box* box : function->freeVariables)
                         if(box)
-                            MakeGrayIfNeeded(box, &steps);
+                            makeGrayIfNeeded(box, &steps);
 
                     if(function->executionContext)
                     {
@@ -431,16 +431,16 @@ namespace element
                         {
                             for(Value& local : frame.variables)
                                 if(local.isManaged())
-                                    MakeGrayIfNeeded(local.garbageCollected, &steps);
+                                    makeGrayIfNeeded(local.garbageCollected, &steps);
 
                             for(Value& anonymousParameter : frame.anonymousParameters.elements)
                                 if(anonymousParameter.isManaged())
-                                    MakeGrayIfNeeded(anonymousParameter.garbageCollected, &steps);
+                                    makeGrayIfNeeded(anonymousParameter.garbageCollected, &steps);
                         }
 
                         for(Value& value : function->executionContext->stack)
                             if(value.isManaged())
-                                MakeGrayIfNeeded(value.garbageCollected, &steps);
+                                makeGrayIfNeeded(value.garbageCollected, &steps);
                     }
                     break;
                 }
@@ -449,7 +449,7 @@ namespace element
                 {
                     Value& value = ((Box*)currentObject)->value;
                     if(value.isManaged())
-                        MakeGrayIfNeeded(value.garbageCollected, &steps);
+                        makeGrayIfNeeded(value.garbageCollected, &steps);
                     break;
                 }
 
@@ -465,14 +465,14 @@ namespace element
         return steps;
     }
 
-    int MemoryManager::SweepHead(int steps)
+    int MemoryManager::sweepHead(int steps)
     {
         while(m_heaphead && steps > 0)
         {
             if(m_heaphead->state == m_currentwhite)
             {
                 GarbageCollected* next = m_heaphead->next;
-                FreeGC(m_heaphead);
+                freeGC(m_heaphead);
                 m_heaphead = next;
             }
             else
@@ -489,14 +489,14 @@ namespace element
         return steps;
     }
 
-    int MemoryManager::SweepRest(int steps)
+    int MemoryManager::sweepRest(int steps)
     {
         while(m_currgc && steps > 0)
         {
             if(m_currgc->state == m_currentwhite)
             {
                 m_prevgc->next = m_currgc->next;
-                FreeGC(m_currgc);
+                freeGC(m_currgc);
                 m_currgc = m_prevgc->next;
             }
             else

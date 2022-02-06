@@ -7,11 +7,22 @@
 
 namespace element
 {
-    VirtualMachine::VirtualMachine()
-    : m_logger(), m_parser(m_logger), m_analyzer(m_logger), m_compiler(m_logger), m_fileman(), m_memoryman(),
-      m_execctx(nullptr), m_stack(nullptr)
+    VirtualMachine::VirtualMachine():
+        m_logger(),
+        m_parser(m_logger),
+        m_analyzer(m_logger),
+        m_compiler(m_logger),
+        m_fileman(),
+        m_memoryman(),
+        m_execctx(nullptr),
+        m_stack(nullptr)
     {
-        RegisterStandardUtilities();
+        registerBuiltins();
+        {
+            std::stringstream tmp;
+            tmp << "{}";
+            evalStream(tmp);
+        }
     }
 
     void VirtualMachine::resetState()
@@ -26,7 +37,7 @@ namespace element
 
         m_memoryman.resetState();
 
-        mConstantStrings.clear();
+        m_conststrings.clear();
         m_constfunctions.clear();
         m_constcodeobjects.clear();
         m_constants.clear();
@@ -39,14 +50,20 @@ namespace element
 
         m_errmessage.clear();
 
-        RegisterStandardUtilities();
+        registerBuiltins();
+    }
+
+    void VirtualMachine::addGlobal(const std::string& name, const Value& v)
+    {
+        std::cerr << "m_execctx->stackFrames.size()=" << m_execctx->stackFrames.size() << std::endl;
+        m_analyzer.addGlobal(name, v);
     }
 
     Value VirtualMachine::evalStream(std::istream& input)
     {
         Value result;
 
-        auto node = m_parser.Parse(input);
+        auto node = m_parser.parse(input);
         std::shared_ptr<ast::FunctionNode> shptr = std::move(node);
 
         if(!m_logger.hasMessages())
@@ -59,14 +76,14 @@ namespace element
 
                 if(!m_logger.hasMessages())
                 {
-                    result = execBytecode(bytecode.get(), m_memoryman.GetDefaultModule());
+                    result = execBytecode(bytecode.get(), m_memoryman.getDefaultModule());
                 }
             }
         }
 
         if(m_logger.hasMessages())
         {
-            result = m_memoryman.NewError(m_logger.getCombined());
+            result = m_memoryman.makeError(m_logger.getCombined());
             m_logger.clearMessages();
         }
 
@@ -80,9 +97,9 @@ namespace element
         std::string fileToExecute = m_fileman.pushFileToExecute(filename);
 
         if(fileToExecute.empty())
-            return m_memoryman.NewError("file-not-found");
+            return m_memoryman.makeError("file-not-found");
 
-        Module& module = m_memoryman.GetModuleForFile(fileToExecute);
+        Module& module = m_memoryman.getModuleForFile(fileToExecute);
 
         if(module.bytecode.get() != nullptr)
         {
@@ -95,7 +112,7 @@ namespace element
 
         std::ifstream input(fileToExecute);
 
-        std::shared_ptr<ast::FunctionNode> node = std::move(m_parser.Parse(input));
+        std::shared_ptr<ast::FunctionNode> node = std::move(m_parser.parse(input));
 
         if(!m_logger.hasMessages())
         {
@@ -114,7 +131,7 @@ namespace element
 
         if(m_logger.hasMessages())
         {
-            result = m_memoryman.NewError(m_logger.getCombined());
+            result = m_memoryman.makeError(m_logger.getCombined());
             m_logger.clearMessages();
         }
 
@@ -159,7 +176,7 @@ namespace element
 
         m_natfuncs.push_back(function);
 
-        m_analyzer.AddNativeFunction(name, index);
+        m_analyzer.addNative(name, index);
     }
 
     std::string VirtualMachine::getVersion() const
@@ -175,35 +192,35 @@ namespace element
                 return value.iterator;
 
             case Value::VT_Array:
-                return m_memoryman.NewIterator(new ArrayIterator(value.array));
+                return m_memoryman.makeIterator(new ArrayIterator(value.array));
 
             case Value::VT_String:
-                return m_memoryman.NewIterator(new StringIterator(value.string));
+                return m_memoryman.makeIterator(new StringIterator(value.string));
 
             case Value::VT_Object:
             {
                 Value hasNextMemberFunction;
-                LoadMemberFromObject(value.object, Symbol::HasNextHash, &hasNextMemberFunction);
+                loadMemberFromObject(value.object, Symbol::HasNextHash, &hasNextMemberFunction);
 
                 Value getNextMemberFunction;
-                LoadMemberFromObject(value.object, Symbol::GetNextHash, &getNextMemberFunction);
+                loadMemberFromObject(value.object, Symbol::GetNextHash, &getNextMemberFunction);
 
                 if(hasNextMemberFunction.isNil() || getNextMemberFunction.isNil())
                     return nullptr;
 
-                return m_memoryman.NewIterator(new ObjectIterator(value, hasNextMemberFunction, getNextMemberFunction));
+                return m_memoryman.makeIterator(new ObjectIterator(value, hasNextMemberFunction, getNextMemberFunction));
             }
 
             case Value::VT_Function:
                 if(value.function->executionContext)// only coroutines
-                    return m_memoryman.NewIterator(new CoroutineIterator(value.function));
+                    return m_memoryman.makeIterator(new CoroutineIterator(value.function));
 
             default:
                 return nullptr;
         }
     }
 
-    unsigned VirtualMachine::GetHashFromName(const std::string& name)
+    unsigned VirtualMachine::hashFromName(const std::string& name)
     {
         unsigned hash = Symbol::Hash(name);
         unsigned step = Symbol::HashStep(hash);
@@ -243,20 +260,20 @@ namespace element
     Value VirtualMachine::getMember(const Value& object, const std::string& memberName)
     {
         Value result;
-        LoadMemberFromObject(object.object, GetHashFromName(memberName), &result);
+        loadMemberFromObject(object.object, hashFromName(memberName), &result);
         return result;
     }
 
     Value VirtualMachine::getMember(const Value& object, unsigned memberHash) const
     {
         Value result;
-        LoadMemberFromObject(object.object, memberHash, &result);
+        loadMemberFromObject(object.object, memberHash, &result);
         return result;
     }
 
     void VirtualMachine::setMember(const Value& object, const std::string& memberName, const Value& value)
     {
-        objectStoreMember(object.object, GetHashFromName(memberName), value);
+        objectStoreMember(object.object, hashFromName(memberName), value);
     }
 
     void VirtualMachine::setMember(const Value& object, unsigned memberHash, const Value& value)
@@ -382,11 +399,11 @@ namespace element
 
                 case Constant::CT_String:
                 {
-                    mConstantStrings.emplace_back(std::move(*(currentConstant.string)));
+                    m_conststrings.emplace_back(std::move(*(currentConstant.string)));
 
-                    mConstantStrings.back().state = GarbageCollected::GC_Static;
+                    m_conststrings.back().state = GarbageCollected::GC_Static;
 
-                    m_constants.emplace_back(&mConstantStrings.back());
+                    m_constants.emplace_back(&m_conststrings.back());
                     break;
                 }
 
@@ -427,7 +444,7 @@ namespace element
         {
             // switch context
             ExecutionContext* oldContext = m_execctx;
-            m_execctx = m_memoryman.NewRootExecutionContext();
+            m_execctx = m_memoryman.makeRootExecutionContext();
             m_stack = &m_execctx->stack;
 
             m_stack->reserve(args.size());
@@ -440,7 +457,7 @@ namespace element
 
             Value result = runCode();
 
-            m_memoryman.DeleteRootExecutionContext(m_execctx);
+            m_memoryman.deleteRootExecutionContext(m_execctx);
             m_execctx = oldContext;
             m_stack = &oldContext->stack;
 
@@ -463,7 +480,7 @@ namespace element
             {
                 logStacktraceFrom(frame);
 
-                return m_memoryman.NewError("runtime-error");
+                return m_memoryman.makeError("runtime-error");
             }
         }
 
@@ -639,7 +656,7 @@ namespace element
                 {
                     int elementsCount = frame->ip->A;
 
-                    Array* array = m_memoryman.NewArray();
+                    Array* array = m_memoryman.makeArray();
                     array->elements.resize(elementsCount);
 
                     for(int i = elementsCount - 1; i >= 0; --i)
@@ -685,7 +702,7 @@ namespace element
                         }
 
                         m_stack->emplace_back();// the value to get
-                        LoadMemberFromObject(container.object, GetHashFromName(index.asString()), &m_stack->back());
+                        loadMemberFromObject(container.object, hashFromName(index.asString()), &m_stack->back());
                     }
                     else// error
                     {
@@ -726,7 +743,7 @@ namespace element
                             return;
                         }
 
-                        objectStoreMember(container.object, GetHashFromName(index.asString()), m_stack->back());
+                        objectStoreMember(container.object, hashFromName(index.asString()), m_stack->back());
                     }
                     else// error
                     {
@@ -769,7 +786,7 @@ namespace element
                             return;
                         }
 
-                        objectStoreMember(container.object, GetHashFromName(index.asString()), m_stack->back());
+                        objectStoreMember(container.object, hashFromName(index.asString()), m_stack->back());
                         m_stack->pop_back();
                     }
                     else// error
@@ -814,7 +831,7 @@ namespace element
                         if(arrayPopElement(array, &popped))
                             m_stack->push_back(popped);
                         else
-                            m_stack->push_back(m_memoryman.NewError("empty-array"));
+                            m_stack->push_back(m_memoryman.makeError("empty-array"));
                     }
                     else
                     {
@@ -830,7 +847,7 @@ namespace element
                 {
                     int membersCount = frame->ip->A;
 
-                    Object* object = m_memoryman.NewObject();
+                    Object* object = m_memoryman.makeObject();
                     object->members.resize(membersCount);
 
                     for(int i = membersCount - 1; i >= 0; --i)
@@ -854,7 +871,7 @@ namespace element
 
                 case OC_MakeEmptyObject:// make an object with just the proto member value
                 {
-                    Object* object = m_memoryman.NewObject();
+                    Object* object = m_memoryman.makeObject();
                     object->members.resize(1);
 
                     object->members[0].hash = Symbol::ProtoHash;
@@ -884,7 +901,7 @@ namespace element
                     m_execctx->lastObject = m_stack->back();
                     m_stack->pop_back();
                     m_stack->emplace_back();// the value to get
-                    LoadMemberFromObject(m_execctx->lastObject.object, hash, &m_stack->back());
+                    loadMemberFromObject(m_execctx->lastObject.object, hash, &m_stack->back());
                     ++frame->ip;
                     break;
                 }
@@ -1024,7 +1041,7 @@ namespace element
                 case OC_MakeBox:// A is the index of the box that needs to be created
                 {
                     Value& variable = frame->variables[frame->ip->A];
-                    variable = m_memoryman.NewBox(variable);
+                    variable = m_memoryman.makeBox(variable);
                     ++frame->ip;
                     break;
                 }
@@ -1041,7 +1058,7 @@ namespace element
 
                     box->value = newValue;
 
-                    m_memoryman.UpdateGcRelationship(box, newValue);
+                    m_memoryman.updateGCRelationship(box, newValue);
 
                     ++frame->ip;
                     break;
@@ -1054,7 +1071,7 @@ namespace element
 
                     box->value = newValue;
 
-                    m_memoryman.UpdateGcRelationship(box, newValue);
+                    m_memoryman.updateGCRelationship(box, newValue);
 
                     m_stack->pop_back();
                     ++frame->ip;
@@ -1063,7 +1080,7 @@ namespace element
 
                 case OC_MakeClosure:// Create a closure from the function object at TOS and replace it
                 {
-                    Function* newFunction = m_memoryman.NewFunction(m_stack->back().function);
+                    Function* newFunction = m_memoryman.makeFunction(m_stack->back().function);
 
                     const std::vector<int>& closureMapping = newFunction->codeObject->closureMapping;
 
@@ -1095,7 +1112,7 @@ namespace element
 
                     box->value = newValue;
 
-                    m_memoryman.UpdateGcRelationship(box, newValue);
+                    m_memoryman.updateGCRelationship(box, newValue);
 
                     ++frame->ip;
                     break;
@@ -1108,7 +1125,7 @@ namespace element
 
                     box->value = newValue;
 
-                    m_memoryman.UpdateGcRelationship(box, newValue);
+                    m_memoryman.updateGCRelationship(box, newValue);
 
                     m_stack->pop_back();
                     ++frame->ip;
@@ -1291,7 +1308,7 @@ namespace element
                 {
                     std::string str = m_stack->back().asString();// anything can be turned into a string
                     m_stack->pop_back();
-                    m_stack->emplace_back(m_memoryman.NewString(str));
+                    m_stack->emplace_back(m_memoryman.makeString(str));
                     ++frame->ip;
                     break;
                 }
@@ -1349,7 +1366,7 @@ namespace element
                 }
                 else if(argumentsCount > 1)// we need to pack them into an array
                 {
-                    Array* array = m_memoryman.NewArray();
+                    Array* array = m_memoryman.makeArray();
                     array->elements.resize(argumentsCount);
 
                     std::copy(m_stack->end() - argumentsCount, m_stack->end(), array->elements.begin());
@@ -1368,7 +1385,7 @@ namespace element
             if(function->executionContext->state == ExecutionContext::CRS_Finished)
             {
                 m_stack->resize(m_stack->size() - argumentsCount);
-                m_stack->push_back(m_memoryman.NewError("dead-coroutine"));
+                m_stack->push_back(m_memoryman.makeError("dead-coroutine"));
                 return;
             }
             if(function->executionContext->state == ExecutionContext::CRS_NotStarted)
@@ -1438,7 +1455,7 @@ namespace element
     {
         array->elements.push_back(newValue);
 
-        m_memoryman.UpdateGcRelationship(array, newValue);
+        m_memoryman.updateGCRelationship(array, newValue);
     }
 
     bool VirtualMachine::arrayPopElement(Array* array, Value* outValue)
@@ -1484,10 +1501,10 @@ namespace element
 
         array->elements[index] = newValue;
 
-        m_memoryman.UpdateGcRelationship(array, newValue);
+        m_memoryman.updateGCRelationship(array, newValue);
     }
 
-    void VirtualMachine::LoadMemberFromObject(Object* object, unsigned hash, Value* outValue) const
+    void VirtualMachine::loadMemberFromObject(Object* object, unsigned hash, Value* outValue) const
     {
         Object::Member member(hash);
 
@@ -1561,7 +1578,7 @@ namespace element
             it->value = newValue;
         }
 
-        m_memoryman.UpdateGcRelationship(object, newValue);
+        m_memoryman.updateGCRelationship(object, newValue);
     }
 
     bool VirtualMachine::doBinaryOperation(int opCode)
@@ -1584,7 +1601,7 @@ namespace element
                 }
                 else if(lhs.isArray() && rhs.isArray())
                 {
-                    Array* newArray = m_memoryman.NewArray();
+                    Array* newArray = m_memoryman.makeArray();
                     auto& elements = newArray->elements;
                     elements.reserve(lhs.array->elements.size() + rhs.array->elements.size());
 
@@ -1597,7 +1614,7 @@ namespace element
                 }
                 else if(lhs.isObject() && rhs.isObject())
                 {
-                    Object* newObject = m_memoryman.NewObject();
+                    Object* newObject = m_memoryman.makeObject();
                     auto& members = newObject->members;
                     members.reserve(lhs.object->members.size() + rhs.object->members.size());
 
@@ -1710,9 +1727,9 @@ namespace element
             case OC_Concatenate:
             {
                 if(lhs.isString() && rhs.isString())
-                    result = m_memoryman.NewString(lhs.string->str + rhs.string->str);
+                    result = m_memoryman.makeString(lhs.string->str + rhs.string->str);
                 else// anything can be turned into a string
-                    result = m_memoryman.NewString(lhs.asString() + rhs.asString());
+                    result = m_memoryman.makeString(lhs.asString() + rhs.asString());
                 break;
             }
 
@@ -1858,13 +1875,15 @@ namespace element
         return true;
     }
 
-    void VirtualMachine::RegisterStandardUtilities()
+    void VirtualMachine::registerBuiltins()
     {
         std::string executablePath = m_fileman.getExePath();
         m_fileman.addSearchPath(executablePath + "../stdlib");
 
-        for(const auto& native : nativefunctions::GetAllFunctions())
+        for(const auto& native : Builtins::GetAllFunctions())
+        {
             addNative(native.name, native.function);
+        }
     }
 
     void VirtualMachine::logStacktraceFrom(const StackFrame* frame)
@@ -1874,7 +1893,7 @@ namespace element
         int line = -1;
         std::string oldFilename;
         std::string newFilename;
-        LocationFromFrame(frame, &line, &oldFilename);
+        locationFromFrame(frame, &line, &oldFilename);
 
         m_logger.pushError(line, m_errmessage);
 
@@ -1892,7 +1911,7 @@ namespace element
 
                 while(!stackFrames.empty())
                 {
-                    LocationFromFrame(&stackFrames.back(), &line, &newFilename);
+                    locationFromFrame(&stackFrames.back(), &line, &newFilename);
 
                     if(oldFilename != newFilename)
                     {
@@ -1910,7 +1929,7 @@ namespace element
         }
     }
 
-    void VirtualMachine::LocationFromFrame(const StackFrame* frame, int* currentLine, std::string* currentFile) const
+    void VirtualMachine::locationFromFrame(const StackFrame* frame, int* currentLine, std::string* currentFile) const
     {
         const CodeObject* codeObject = frame->function->codeObject;
 

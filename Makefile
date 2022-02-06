@@ -7,7 +7,8 @@ CXX = clang++ -std=c++20
 CFLAGS = $(INCFLAGS) -Og -g3 -ggdb3
 CXXFLAGS = $(CFLAGS) -Wall -Wextra
 LDFLAGS = -flto -ldl -lm  -lreadline
-target = run
+targetexe = run
+
 
 src = \
 	$(wildcard *.cpp) \
@@ -16,7 +17,7 @@ obj = $(src:.cpp=.o)
 dep = $(obj:.o=.d)
 
 
-$(target): $(obj)
+$(targetexe): $(obj)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 -include $(dep)
@@ -31,14 +32,14 @@ $(target): $(obj)
 
 .PHONY: clean
 clean:
-	rm -f $(obj) $(target)
+	rm -f $(obj) $(targetexe)
 
 .PHONY: cleandep
 cleandep:
 	rm -f $(dep)
 
 .PHONY: rebuild
-rebuild: clean cleandep $(target)
+rebuild: clean cleandep $(targetexe)
 
 .PHONY: sanity
 sanity:

@@ -23,14 +23,14 @@ namespace element
     {
         analyzeNode(node);
 
-        ResolveNamesInNodes({ node });
+        resolveNamesInNodes({ node });
 
         m_context.clear();
-        mFunctionScopes.clear();
+        m_funscopes.clear();
         m_globalvars.clear();
     }
 
-    void SemanticAnalyzer::AddNativeFunction(const std::string& name, int index)
+    void SemanticAnalyzer::addNative(const std::string& name, int index)
     {
         m_natfuncs[name] = index;
     }
@@ -38,7 +38,7 @@ namespace element
     void SemanticAnalyzer::resetState()
     {
         m_context.clear();
-        mFunctionScopes.clear();
+        m_funscopes.clear();
         m_globalvars.clear();
         m_natfuncs.clear();
 
@@ -487,7 +487,7 @@ namespace element
         return m_context.back() == CXT_InArray || m_context.back() == CXT_InObject || m_context.back() == CXT_InArguments;
     }
 
-    void SemanticAnalyzer::ResolveNamesInNodes(std::vector<std::shared_ptr<ast::Node>> nodesToProcess)
+    void SemanticAnalyzer::resolveNamesInNodes(std::vector<std::shared_ptr<ast::Node>> nodesToProcess)
     {
         std::vector<std::shared_ptr<ast::Node>> nodesToDefer;
         std::shared_ptr<ast::Node> node = nullptr;
@@ -648,15 +648,15 @@ namespace element
 
                     if(n->explicitFunctionBlock)
                     {
-                        ResolveNamesInNodes(toProcess);
+                        resolveNamesInNodes(toProcess);
                     }
                     else// regular block
                     {
-                        mFunctionScopes.back().blocks.emplace_back();
+                        m_funscopes.back().blocks.emplace_back();
 
-                        ResolveNamesInNodes(toProcess);
+                        resolveNamesInNodes(toProcess);
 
-                        mFunctionScopes.back().blocks.pop_back();
+                        m_funscopes.back().blocks.pop_back();
                     }
 
                     break;
@@ -666,16 +666,16 @@ namespace element
                 {
                     auto n = std::dynamic_pointer_cast<ast::FunctionNode>(deferredNode);
 
-                    bool isGlobal = mFunctionScopes.empty();
+                    bool isGlobal = m_funscopes.empty();
 
-                    mFunctionScopes.emplace_back(n);
+                    m_funscopes.emplace_back(n);
 
                     if(isGlobal)
-                        mFunctionScopes.back().blocks.pop_back();
+                        m_funscopes.back().blocks.pop_back();
 
-                    ResolveNamesInNodes({ n->body });
+                    resolveNamesInNodes({ n->body });
 
-                    mFunctionScopes.pop_back();
+                    m_funscopes.pop_back();
 
                     break;
                 }
@@ -683,31 +683,44 @@ namespace element
         }
     }
 
+    void SemanticAnalyzer::addGlobal(const std::string& name, const Value& val)
+    {
+        auto vn = std::make_shared<ast::VariableNode>(ast::VariableNode::V_Underscore, Location{});
+        vn->semanticType = ast::VariableNode::SMT_Global;
+        vn->index = int(m_globalvars.size());
+        vn->firstOccurrence = true;
+
+        //m_globalvars.push_back(name);
+
+        std::cerr << "m_functionscope.size() = " << m_funscopes.size() << std::endl; 
+
+    }
+
     void SemanticAnalyzer::resolveName(const std::shared_ptr<ast::VariableNode>& vn)
     {
         const std::string& name = vn->name;
 
         // if this is the global function scope
-        if(mFunctionScopes.size() == 1 && mFunctionScopes.front().blocks.empty())
+        if(m_funscopes.size() == 1 && m_funscopes.front().blocks.empty())
         {
             // try the global scope
-            auto globalIt = std::find(m_globalvars.begin(), m_globalvars.end(), name);
+            auto globit = std::find(m_globalvars.begin(), m_globalvars.end(), name);
 
-            if(globalIt != m_globalvars.end())
+            if(globit != m_globalvars.end())
             {
                 vn->semanticType = ast::VariableNode::SMT_Global;
-                vn->index = std::distance(m_globalvars.begin(), globalIt);
+                vn->index = std::distance(m_globalvars.begin(), globit);
                 vn->firstOccurrence = false;
                 return;
             }
 
             // try the native constants
-            auto nativeIt = m_natfuncs.find(name);
+            auto nit = m_natfuncs.find(name);
 
-            if(nativeIt != m_natfuncs.end())
+            if(nit != m_natfuncs.end())
             {
                 vn->semanticType = ast::VariableNode::SMT_Native;
-                vn->index = nativeIt->second;
+                vn->index = nit->second;
                 vn->firstOccurrence = false;
                 return;
             }
@@ -722,7 +735,7 @@ namespace element
         }
 
         // otherwise we are inside a function
-        FunctionScope& localFunctionScope = mFunctionScopes.back();
+        FunctionScope& localFunctionScope = m_funscopes.back();
 
         // try the parameters of this function
         int parametersSize = int(localFunctionScope.parameters.size());
@@ -765,27 +778,27 @@ namespace element
         }
 
         // try the enclosing function scopes if this is part of a closure
-        if(TryToFindNameInTheEnclosingFunctions(vn))
+        if(tryFindNameInEnclosing(vn))
             return;
 
         // try the global scope (check this after the parameters, because they can hide globals)
-        auto globalIt = std::find(m_globalvars.begin(), m_globalvars.end(), name);
+        auto globit = std::find(m_globalvars.begin(), m_globalvars.end(), name);
 
-        if(globalIt != m_globalvars.end())
+        if(globit != m_globalvars.end())
         {
             vn->semanticType = ast::VariableNode::SMT_Global;
-            vn->index = std::distance(m_globalvars.begin(), globalIt);
+            vn->index = std::distance(m_globalvars.begin(), globit);
             vn->firstOccurrence = false;
             return;
         }
 
         // try the native constants (check this after the parameters, because they can hide natives)
-        auto nativeIt = m_natfuncs.find(name);
+        auto nit = m_natfuncs.find(name);
 
-        if(nativeIt != m_natfuncs.end())
+        if(nit != m_natfuncs.end())
         {
             vn->semanticType = ast::VariableNode::SMT_Native;
-            vn->index = nativeIt->second;
+            vn->index = nit->second;
             vn->firstOccurrence = false;
             return;
         }
@@ -798,7 +811,7 @@ namespace element
         localFunctionScope.blocks.back().variables[name] = vn;
     }
 
-    bool SemanticAnalyzer::TryToFindNameInTheEnclosingFunctions(const std::shared_ptr<ast::VariableNode>& vn)
+    bool SemanticAnalyzer::tryFindNameInEnclosing(const std::shared_ptr<ast::VariableNode>& vn)
     {
         bool found = false;
         int foundAtIndex = 0;
@@ -819,7 +832,7 @@ namespace element
         };
 
         // try each of the enclosing function scopes in reverse
-        for(auto functionIt = ++mFunctionScopes.rbegin(); functionIt != mFunctionScopes.rend(); ++functionIt)
+        for(auto functionIt = ++m_funscopes.rbegin(); functionIt != m_funscopes.rend(); ++functionIt)
         {
             int freeVariablesSize = int(functionIt->freeVariables.size());
             for(int i = 0; i < freeVariablesSize; ++i)
@@ -880,12 +893,12 @@ namespace element
 
             if(found)
             {
-                int foundFunctionScopeIndex = std::distance(mFunctionScopes.begin(), functionIt.base()) - 1;
-                int localFunctionScopeIndex = int(mFunctionScopes.size() - 1);
+                int foundFunctionScopeIndex = std::distance(m_funscopes.begin(), functionIt.base()) - 1;
+                int localFunctionScopeIndex = int(m_funscopes.size() - 1);
 
                 while(foundFunctionScopeIndex + 1 < localFunctionScopeIndex)
                 {
-                    FunctionScope& functionScope = mFunctionScopes[foundFunctionScopeIndex + 1];
+                    FunctionScope& functionScope = m_funscopes[foundFunctionScopeIndex + 1];
 
                     int newFreeVarIndex = int(functionScope.freeVariables.size());
                     newFreeVarIndex = -newFreeVarIndex - 1;// negative index for free variables
@@ -898,7 +911,7 @@ namespace element
                     ++foundFunctionScopeIndex;
                 }
 
-                FunctionScope& localFunctionScope = mFunctionScopes.back();
+                FunctionScope& localFunctionScope = m_funscopes.back();
 
                 localFunctionScope.freeVariables.push_back(name);
                 localFunctionScope.node->closureMapping.push_back(foundAtIndex);
